@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "OmdServer (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/OmdServer/bin/Debug/net8.0/OmdServer.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/OmdServer",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
+      "env": {
+        "PATH": "${env:HOME}/.dotnet:${env:PATH}",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080"
+      }
+    },
+    {
+      "name": "OmdServer (Attach)",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

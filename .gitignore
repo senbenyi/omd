@@ -1,0 +1,159 @@
+# =============================================================================
+# OMD Monorepo — Flutter (omd_app) + ASP.NET Core (omd_server)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# OS / 编辑器 / IDE
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+*.swp
+*.swo
+*~
+.history
+.svn/
+
+.idea/
+*.iml
+*.ipr
+*.iws
+
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# VS Code：保留团队共享配置，忽略个人本地项
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+.atom/
+.buildlog/
+
+# -----------------------------------------------------------------------------
+# 密钥 / 本地配置（勿提交）
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+**/android/key.properties
+**/android/local.properties
+appsettings.*.local.json
+secrets.json
+
+# -----------------------------------------------------------------------------
+# 日志 / 临时文件
+# -----------------------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# -----------------------------------------------------------------------------
+# Flutter / Dart / Pub / Melos (omd_app)
+# -----------------------------------------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.pub-preload-cache/
+.packages.generated
+
+**/doc/api/
+coverage/
+.fvm/
+
+# Melos 本地覆盖（由 melos bootstrap 生成，勿提交）
+pubspec_overrides.yaml
+**/pubspec_overrides.yaml
+
+# 构建产物
+build/
+**/build/
+build_outputs/
+
+# 符号化 / 混淆
+app.*.symbols
+app.*.map.json
+
+# Android
+**/.gradle/
+**/android/captures/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+
+# iOS / Xcode
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/**/xcuserdata/
+**/ios/**/DerivedData/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS (Flutter desktop)
+**/macos/Flutter/ephemeral/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Linux / Windows — Flutter 插件注册自动生成
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+
+# -----------------------------------------------------------------------------
+# .NET / ASP.NET Core (omd_server)
+# -----------------------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Tt]est[Rr]esult*/
+*.VisualState.xml
+TestResult.xml
+[Dd]ebug/
+[Rr]elease/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# 运行时上传目录
+**/wwwroot/uploads/
+
+# -----------------------------------------------------------------------------
+# 其他工具缓存
+# -----------------------------------------------------------------------------
+*.class
+*.pyc
+.metadata
+.swiftpm/
+migrate_working_dir/
+node_modules/
+
+# JetBrains / SourceTree 等本地 git 辅助配置
+**/.idea/
+.git/sourcetreeconfig

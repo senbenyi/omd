@@ -1,0 +1,6 @@
+{
+  "omnisharp.dotnetPath": "/Users/tom/.dotnet/dotnet",
+  "terminal.integrated.env.osx": {
+    "PATH": "/Users/tom/.dotnet:${env:PATH}"
+  }
+}
