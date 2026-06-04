@@ -2,23 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store/module/a_color/store_colors.dart';
-import 'package:store/module/menu/menu_core_widgets.dart';
 import 'package:store/module/menu/menu_i18n.dart';
 import 'package:store/module/menu/menu_models.dart';
+import 'package:store/module/menu/sold_out/menu_sold_out_tab_controller.dart';
+import 'package:store/module/menu/sold_out/menu_sold_out_ui.dart';
 import 'package:store/module/menu/sold_out/menu_sold_out_widgets.dart';
 import 'package:store/module/menu/store_tab_menu_controller.dart';
 
-/// 已售罄 Tab：全宽菜品列表。
+/// 已售罄 Tab。
 class MenuSoldOutPanel extends StatelessWidget {
   const MenuSoldOutPanel({
     super.key,
-    required this.controller,
+    required this.shell,
+    required this.tab,
     required this.bottomInset,
     required this.onEditItem,
     required this.onRestoreStock,
   });
 
-  final StoreTabMenuController controller;
+  final StoreTabMenuController shell;
+  final MenuSoldOutTabController tab;
   final double bottomInset;
   final ValueChanged<MenuItemListModel> onEditItem;
   final ValueChanged<MenuItemListModel> onRestoreStock;
@@ -26,9 +29,8 @@ class MenuSoldOutPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final itemList = controller.items.toList(growable: false);
-      final loading =
-          controller.isLoadingItems.value && itemList.isEmpty;
+      final itemList = tab.items.toList(growable: false);
+      final loading = tab.isLoading.value && itemList.isEmpty;
 
       if (loading) {
         return const Center(child: CircularProgressIndicator());
@@ -39,7 +41,7 @@ class MenuSoldOutPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MenuPanelHeader(
+            MenuSoldOutPanelHeader(
               title: StoreMenuI18n.soldOutSectionLabel.tr,
               leadingIcon: Icons.remove_shopping_cart_outlined,
               subtitle: StoreMenuI18n.itemCount.trParams({
@@ -48,7 +50,10 @@ class MenuSoldOutPanel extends StatelessWidget {
             ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: controller.refreshCurrentPanel,
+                onRefresh: () async {
+                  final storeId = shell.selectedStoreId.value;
+                  if (storeId != null) await tab.reload(storeId);
+                },
                 color: StoreColors.tabSelected,
                 child: _buildSoldOutList(
                   itemList: itemList,
@@ -74,7 +79,7 @@ class MenuSoldOutPanel extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: 80.h),
-          MenuEmptyState(
+          MenuSoldOutEmptyState(
             message: StoreMenuI18n.emptySoldOutItems.tr,
             icon: Icons.remove_shopping_cart_outlined,
           ),
@@ -96,8 +101,6 @@ class MenuSoldOutPanel extends StatelessWidget {
               ? item.categoryName
               : StoreMenuI18n.unknownCategory.tr,
           tags: item.tags,
-          createdAt: item.createdAt,
-          soldOutLabel: StoreMenuI18n.soldOutSectionLabel.tr,
           restoreLabel: StoreMenuI18n.restoreStock.tr,
           onRestoreStock: () => onRestoreStock(item),
           onTap: () => onEditItem(item),

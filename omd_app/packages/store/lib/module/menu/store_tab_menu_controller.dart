@@ -1,42 +1,42 @@
 import 'package:base/log/nine_log.dart';
 import 'package:base/toast/nine_toast.dart';
 import 'package:get/get.dart';
-import 'package:store/module/menu/menu_api.dart';
+import 'package:store/module/menu/category/menu_category_tab_controller.dart';
+import 'package:store/module/menu/combo/menu_combo_tab_controller.dart';
 import 'package:store/module/menu/menu_i18n.dart';
 import 'package:store/module/menu/menu_models.dart';
+import 'package:store/module/menu/off_shelf/menu_off_shelf_tab_controller.dart';
+import 'package:store/module/menu/sold_out/menu_sold_out_tab_controller.dart';
 import 'package:store/module/store/store_api.dart';
 import 'package:store/module/store/store_models.dart';
 import 'package:store/module/store/store_tab_store_controller.dart';
 
-part 'category/menu_category_controller.dart';
-part 'combo/menu_combo_controller.dart';
-part 'sold_out/menu_sold_out_controller.dart';
-part 'off_shelf/menu_off_shelf_controller.dart';
-
+/// 菜单页壳：店铺选择与 Tab 切换；各 Tab 数据在独立 Controller 中。
 class StoreTabMenuController extends GetxController {
-  StoreTabMenuController({this.fixedStoreId});
+  StoreTabMenuController({this.fixedStoreId}) {
+    categoryTab = MenuCategoryTabController();
+    comboTab = MenuComboTabController();
+    soldOutTab = MenuSoldOutTabController();
+    offShelfTab = MenuOffShelfTabController();
+  }
 
-  /// 非空时锁定为单店菜单（从店铺详情进入）。
   final int? fixedStoreId;
 
-  bool get isStoreLocked => fixedStoreId != null;
+  late final MenuCategoryTabController categoryTab;
+  late final MenuComboTabController comboTab;
+  late final MenuSoldOutTabController soldOutTab;
+  late final MenuOffShelfTabController offShelfTab;
+
   final stores = RxList<StoreModel>([]);
-  final categories = RxList<MenuCategoryModel>([]);
-  final combos = RxList<MenuComboModel>([]);
-  final items = RxList<MenuItemListModel>([]);
-  final comboDetail = Rxn<MenuComboDetailModel>();
-
   final selectedStoreId = RxnInt();
-  final selectedCategoryId = RxnInt();
-  final selectedComboId = RxnInt();
   final selectedKind = MenuSidebarKind.category.obs;
-
   final isLoadingStores = false.obs;
-  final isLoadingSidebar = false.obs;
-  final isLoadingItems = false.obs;
-  final isLoadingComboDetail = false.obs;
-  final isSavingCategory = false.obs;
-  final isSavingCombo = false.obs;
+
+  bool get isStoreLocked => fixedStoreId != null;
+
+  bool get isComboSelected => selectedKind.value == MenuSidebarKind.combo;
+  bool get isOffShelfSelected => selectedKind.value == MenuSidebarKind.offShelf;
+  bool get isSoldOutSelected => selectedKind.value == MenuSidebarKind.soldOut;
 
   StoreModel? get selectedStore {
     final id = selectedStoreId.value;
@@ -47,34 +47,14 @@ class StoreTabMenuController extends GetxController {
     return null;
   }
 
-  MenuCategoryModel? get selectedCategory {
-    if (selectedKind.value != MenuSidebarKind.category) return null;
-    final id = selectedCategoryId.value;
-    if (id == null) return null;
-    for (final category in categories) {
-      if (category.id == id) return category;
-    }
-    return null;
-  }
-
-  MenuComboModel? get selectedCombo {
-    if (selectedKind.value != MenuSidebarKind.combo) return null;
-    final id = selectedComboId.value;
-    if (id == null) return null;
-    for (final combo in combos) {
-      if (combo.id == id) return combo;
-    }
-    return null;
-  }
-
-  bool get isComboSelected => selectedKind.value == MenuSidebarKind.combo;
-
-  bool get isOffShelfSelected => selectedKind.value == MenuSidebarKind.offShelf;
-
-  bool get isSoldOutSelected => selectedKind.value == MenuSidebarKind.soldOut;
-
   bool get isBootstrapping =>
-      isLoadingStores.value || isLoadingSidebar.value || isLoadingItems.value;
+      isLoadingStores.value ||
+      (selectedKind.value == MenuSidebarKind.category &&
+          categoryTab.isLoadingSidebar.value) ||
+      (selectedKind.value == MenuSidebarKind.combo &&
+          comboTab.isLoadingSidebar.value) ||
+      (selectedKind.value == MenuSidebarKind.soldOut && soldOutTab.isLoading.value) ||
+      (selectedKind.value == MenuSidebarKind.offShelf && offShelfTab.isLoading.value);
 
   @override
   void onInit() {
@@ -84,7 +64,15 @@ class StoreTabMenuController extends GetxController {
     }
   }
 
-  /// Tab 菜单页首次展示或数据为空时拉取。
+  @override
+  void onClose() {
+    categoryTab.dispose();
+    comboTab.dispose();
+    soldOutTab.dispose();
+    offShelfTab.dispose();
+    super.onClose();
+  }
+
   Future<void> ensureLoaded() async {
     if (fixedStoreId != null) {
       if (stores.isEmpty && !isLoadingStores.value) {
@@ -93,7 +81,7 @@ class StoreTabMenuController extends GetxController {
       return;
     }
 
-    if (isLoadingStores.value || isLoadingSidebar.value) return;
+    if (isLoadingStores.value) return;
 
     if (stores.isEmpty) {
       await bootstrap();
@@ -106,9 +94,7 @@ class StoreTabMenuController extends GetxController {
       return;
     }
 
-    if (categories.isEmpty && combos.isEmpty) {
-      await loadSidebar(storeId);
-    }
+    await _ensureActiveTab(storeId);
   }
 
   Future<void> bootstrap() async {
@@ -119,7 +105,7 @@ class StoreTabMenuController extends GetxController {
     await loadStores();
     final storeId = selectedStoreId.value;
     if (storeId != null) {
-      await loadSidebar(storeId);
+      await _ensureActiveTab(storeId);
     }
   }
 
@@ -151,10 +137,8 @@ class StoreTabMenuController extends GetxController {
 
       stores.assignAll([store!]);
       selectedStoreId.value = storeId;
-      _clearSidebarSelection();
-      items.clear();
-      comboDetail.value = null;
-      await loadSidebar(storeId);
+      _resetAllTabs();
+      await _ensureActiveTab(storeId);
     } catch (e, stack) {
       NLog.e('菜单页加载指定店铺失败: $e\n$stack');
       showAppToast(StoreMenuI18n.loadFailed.tr);
@@ -189,11 +173,7 @@ class StoreTabMenuController extends GetxController {
 
       if (stores.isEmpty) {
         selectedStoreId.value = null;
-        _clearSidebarSelection();
-        categories.clear();
-        combos.clear();
-        items.clear();
-        comboDetail.value = null;
+        _resetAllTabs();
         return;
       }
 
@@ -211,104 +191,21 @@ class StoreTabMenuController extends GetxController {
 
   Future<void> selectStore(int storeId) async {
     if (isStoreLocked && storeId != fixedStoreId) return;
-    if (selectedStoreId.value == storeId &&
-        (categories.isNotEmpty || combos.isNotEmpty)) {
+    if (selectedStoreId.value == storeId) {
+      await _ensureActiveTab(storeId);
       return;
     }
     selectedStoreId.value = storeId;
-    _clearSidebarSelection();
-    items.clear();
-    comboDetail.value = null;
-    await loadSidebar(storeId);
-  }
-
-  void _clearSidebarSelection() {
-    selectedCategoryId.value = null;
-    selectedComboId.value = null;
     selectedKind.value = MenuSidebarKind.category;
-    comboDetail.value = null;
+    _resetAllTabs();
+    await categoryTab.ensureLoaded(storeId);
   }
 
-  Future<void> loadSidebar(int storeId) async {
-    isLoadingSidebar.value = true;
-    try {
-      final categoryResponse = await MenuApi.listCategories(storeId);
-      final comboResponse = await MenuApi.listCombos(storeId);
-
-      if (!categoryResponse.isSuccess) {
-        showAppToast(
-          categoryResponse.message.isNotEmpty
-              ? categoryResponse.message
-              : StoreMenuI18n.loadFailed.tr,
-        );
-        return;
-      }
-      if (!comboResponse.isSuccess) {
-        showAppToast(
-          comboResponse.message.isNotEmpty
-              ? comboResponse.message
-              : StoreMenuI18n.loadFailed.tr,
-        );
-        return;
-      }
-
-      final categoryList = categoryResponse.data ?? [];
-      final comboList = comboResponse.data ?? [];
-      categories
-        ..clear()
-        ..addAll(categoryList);
-      categories.refresh();
-      combos
-        ..clear()
-        ..addAll(comboList);
-      combos.refresh();
-
-      if (categoryList.isEmpty && comboList.isEmpty) {
-        _clearSidebarSelection();
-        items.clear();
-        return;
-      }
-
-      if (selectedKind.value == MenuSidebarKind.category) {
-        final currentCategory = selectedCategoryId.value;
-        if (currentCategory != null &&
-            categoryList.any((c) => c.id == currentCategory)) {
-          await loadCategoryItems(storeId: storeId, categoryId: currentCategory);
-          return;
-        }
-      }
-
-      if (selectedKind.value == MenuSidebarKind.offShelf) {
-        await loadOffShelfItems(storeId: storeId);
-        return;
-      }
-
-      if (selectedKind.value == MenuSidebarKind.soldOut) {
-        await loadSoldOutItems(storeId: storeId);
-        return;
-      }
-
-      if (selectedKind.value == MenuSidebarKind.combo) {
-        final currentCombo = selectedComboId.value;
-        if (currentCombo != null && comboList.any((c) => c.id == currentCombo)) {
-          await loadComboDetail(storeId: storeId, comboId: currentCombo);
-          return;
-        }
-      }
-
-      if (categoryList.isNotEmpty) {
-        selectedKind.value = MenuSidebarKind.category;
-        await selectCategory(categoryList.first.id);
-      } else if (comboList.isNotEmpty) {
-        selectedKind.value = MenuSidebarKind.combo;
-        await selectCombo(comboList.first.id);
-      }
-    } catch (e, stack) {
-      NLog.e('菜单页加载分类/套餐失败: $e\n$stack');
-      showAppToast(StoreMenuI18n.loadFailed.tr);
-    } finally {
-      isLoadingSidebar.value = false;
-    }
+  void _resetAllTabs() {
+    categoryTab.reset();
+    comboTab.reset();
+    soldOutTab.reset();
+    offShelfTab.reset();
   }
 
   Future<void> switchMenuTab(MenuSidebarKind kind) async {
@@ -316,113 +213,19 @@ class StoreTabMenuController extends GetxController {
     selectedKind.value = kind;
     final storeId = selectedStoreId.value;
     if (storeId == null) return;
-
-    if (kind == MenuSidebarKind.category) {
-      final categoryId = selectedCategoryId.value;
-      if (categoryId != null && categories.any((c) => c.id == categoryId)) {
-        await loadCategoryItems(storeId: storeId, categoryId: categoryId);
-        return;
-      }
-      if (categories.isNotEmpty) {
-        await selectCategory(categories.first.id);
-        return;
-      }
-      selectedCategoryId.value = null;
-      items.clear();
-      items.refresh();
-      return;
-    }
-
-    if (kind == MenuSidebarKind.offShelf) {
-      selectedCategoryId.value = null;
-      selectedComboId.value = null;
-      comboDetail.value = null;
-      await loadOffShelfItems(storeId: storeId);
-      return;
-    }
-
-    if (kind == MenuSidebarKind.soldOut) {
-      selectedCategoryId.value = null;
-      selectedComboId.value = null;
-      comboDetail.value = null;
-      await loadSoldOutItems(storeId: storeId);
-      return;
-    }
-
-    final comboId = selectedComboId.value;
-    if (comboId != null && combos.any((c) => c.id == comboId)) {
-      await loadComboDetail(storeId: storeId, comboId: comboId);
-      return;
-    }
-    if (combos.isNotEmpty) {
-      await selectCombo(combos.first.id);
-      return;
-    }
-    selectedComboId.value = null;
-    comboDetail.value = null;
+    await _ensureActiveTab(storeId);
   }
 
-  Future<bool> updateItemStatus({
-    required int itemId,
-    required String status,
-  }) async {
-    final storeId = selectedStoreId.value;
-    if (storeId == null) return false;
-
-    try {
-      final response = await MenuApi.updateItemStatus(
-        storeId,
-        UpdateMenuItemStatusRequest(itemId: itemId, status: status),
-      );
-      if (!response.isSuccess) {
-        showAppToast(
-          response.message.isNotEmpty
-              ? response.message
-              : StoreMenuI18n.loadFailed.tr,
-        );
-        return false;
-      }
-
-      showAppToast(StoreMenuI18n.saveSuccess.tr);
-      await _refreshSidebarMeta(storeId);
-      await refreshCurrentPanel();
-      return true;
-    } catch (e, stack) {
-      NLog.e('菜单页更新菜品状态失败: $e\n$stack');
-      showAppToast(StoreMenuI18n.loadFailed.tr);
-      return false;
-    }
-  }
-
-  Future<bool> updateItemSoldOut({
-    required int itemId,
-    required bool soldOut,
-  }) async {
-    final storeId = selectedStoreId.value;
-    if (storeId == null) return false;
-
-    try {
-      final response = await MenuApi.updateItemSoldOut(
-        storeId,
-        UpdateMenuItemSoldOutRequest(itemId: itemId, soldOut: soldOut),
-      );
-      if (!response.isSuccess) {
-        showAppToast(
-          response.message.isNotEmpty
-              ? response.message
-              : StoreMenuI18n.loadFailed.tr,
-        );
-        return false;
-      }
-
-      showAppToast(StoreMenuI18n.saveSuccess.tr);
-      await _refreshSidebarMeta(storeId);
-      await refreshCurrentPanel();
-      return true;
-    } catch (e, stack) {
-      NLog.e('菜单页更新售罄状态失败: $e\n$stack');
-      showAppToast(StoreMenuI18n.loadFailed.tr);
-      return false;
+  Future<void> _ensureActiveTab(int storeId) async {
+    switch (selectedKind.value) {
+      case MenuSidebarKind.category:
+        await categoryTab.ensureLoaded(storeId);
+      case MenuSidebarKind.combo:
+        await comboTab.ensureLoaded(storeId);
+      case MenuSidebarKind.soldOut:
+        await soldOutTab.ensureLoaded(storeId);
+      case MenuSidebarKind.offShelf:
+        await offShelfTab.ensureLoaded(storeId);
     }
   }
 
@@ -432,53 +235,34 @@ class StoreTabMenuController extends GetxController {
       await loadStores();
       return;
     }
-    await loadSidebar(storeId);
+    await refreshActiveTab();
   }
 
-  /// 仅刷新右侧当前面板，并同步侧栏计数。
-  Future<void> refreshCurrentPanel() async {
+  Future<void> refreshActiveTab() async {
     final storeId = selectedStoreId.value;
     if (storeId == null) return;
 
-    await _refreshSidebarMeta(storeId);
-
-    if (isComboSelected) {
-      final comboId = selectedComboId.value;
-      if (comboId != null) {
-        await loadComboDetail(storeId: storeId, comboId: comboId);
-      }
-      return;
-    }
-
-    if (isOffShelfSelected) {
-      await loadOffShelfItems(storeId: storeId);
-      return;
-    }
-
-    if (isSoldOutSelected) {
-      await loadSoldOutItems(storeId: storeId);
-      return;
-    }
-
-    final categoryId = selectedCategoryId.value;
-    if (categoryId != null) {
-      await loadCategoryItems(storeId: storeId, categoryId: categoryId);
+    switch (selectedKind.value) {
+      case MenuSidebarKind.category:
+        await categoryTab.reload(storeId);
+      case MenuSidebarKind.combo:
+        await comboTab.reload(storeId);
+      case MenuSidebarKind.soldOut:
+        await soldOutTab.reload(storeId);
+      case MenuSidebarKind.offShelf:
+        await offShelfTab.reload(storeId);
     }
   }
 
-  Future<void> _refreshSidebarMeta(int storeId) async {
-    try {
-      final categoryResponse = await MenuApi.listCategories(storeId);
-      final comboResponse = await MenuApi.listCombos(storeId);
-      if (categoryResponse.isSuccess) {
-        categories.assignAll(categoryResponse.data ?? []);
-      }
-      if (comboResponse.isSuccess) {
-        combos.assignAll(comboResponse.data ?? []);
-      }
-    } catch (e, stack) {
-      NLog.e('菜单页刷新侧栏计数失败: $e\n$stack');
-    }
+  Future<bool> addCategory(String name) async {
+    final storeId = selectedStoreId.value;
+    if (storeId == null) return false;
+    return categoryTab.addCategory(storeId, name);
   }
 
+  Future<bool> addCombo(String name) async {
+    final storeId = selectedStoreId.value;
+    if (storeId == null) return false;
+    return comboTab.addCombo(storeId, name);
+  }
 }

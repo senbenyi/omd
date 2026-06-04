@@ -2,23 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store/module/a_color/store_colors.dart';
-import 'package:store/module/menu/menu_core_widgets.dart';
 import 'package:store/module/menu/menu_i18n.dart';
 import 'package:store/module/menu/menu_models.dart';
+import 'package:store/module/menu/off_shelf/menu_off_shelf_tab_controller.dart';
+import 'package:store/module/menu/off_shelf/menu_off_shelf_ui.dart';
 import 'package:store/module/menu/off_shelf/menu_off_shelf_widgets.dart';
 import 'package:store/module/menu/store_tab_menu_controller.dart';
 
-/// 已下架 Tab：全宽菜品列表。
+/// 已下架 Tab。
 class MenuOffShelfPanel extends StatelessWidget {
   const MenuOffShelfPanel({
     super.key,
-    required this.controller,
+    required this.shell,
+    required this.tab,
     required this.bottomInset,
     required this.onEditItem,
     required this.onRelistItem,
   });
 
-  final StoreTabMenuController controller;
+  final StoreTabMenuController shell;
+  final MenuOffShelfTabController tab;
   final double bottomInset;
   final ValueChanged<MenuItemListModel> onEditItem;
   final ValueChanged<MenuItemListModel> onRelistItem;
@@ -26,9 +29,8 @@ class MenuOffShelfPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final itemList = controller.items.toList(growable: false);
-      final loading =
-          controller.isLoadingItems.value && itemList.isEmpty;
+      final itemList = tab.items.toList(growable: false);
+      final loading = tab.isLoading.value && itemList.isEmpty;
 
       if (loading) {
         return const Center(child: CircularProgressIndicator());
@@ -39,7 +41,7 @@ class MenuOffShelfPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MenuPanelHeader(
+            MenuOffShelfPanelHeader(
               title: StoreMenuI18n.offShelfSectionLabel.tr,
               leadingIcon: Icons.inventory_2_outlined,
               subtitle: StoreMenuI18n.itemCount.trParams({
@@ -48,7 +50,10 @@ class MenuOffShelfPanel extends StatelessWidget {
             ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: controller.refreshCurrentPanel,
+                onRefresh: () async {
+                  final storeId = shell.selectedStoreId.value;
+                  if (storeId != null) await tab.reload(storeId);
+                },
                 color: StoreColors.tabSelected,
                 child: _buildOffShelfList(
                   itemList: itemList,
@@ -74,7 +79,7 @@ class MenuOffShelfPanel extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: 80.h),
-          MenuEmptyState(
+          MenuOffShelfEmptyState(
             message: StoreMenuI18n.emptyOffShelfItems.tr,
             icon: Icons.inventory_2_outlined,
           ),
@@ -96,8 +101,6 @@ class MenuOffShelfPanel extends StatelessWidget {
               ? item.categoryName
               : StoreMenuI18n.unknownCategory.tr,
           tags: item.tags,
-          createdAt: item.createdAt,
-          onSaleLabel: StoreMenuI18n.statusOnSale.tr,
           offSaleLabel: StoreMenuI18n.statusOffSale.tr,
           relistLabel: StoreMenuI18n.relistItem.tr,
           onRelist: () => onRelistItem(item),

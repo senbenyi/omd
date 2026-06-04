@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store/common/store_translations.dart';
 import 'package:store/module/a_color/store_colors.dart';
+import 'package:store/module/menu/category/menu_categoty_dish_item.dart';
 import 'package:store/module/menu/category/menu_category_panel.dart';
 import 'package:store/module/menu/combo/menu_combo_panel.dart';
 import 'package:store/module/menu/menu_combo_form_page.dart';
@@ -231,7 +232,8 @@ class _MenuPageBodyState extends State<MenuPageBody>
             child: Obx(() {
               if (controller.isSoldOutSelected) {
                 return MenuSoldOutPanel(
-                  controller: controller,
+                  shell: controller,
+                  tab: controller.soldOutTab,
                   bottomInset: _bottomInset(context),
                   onEditItem: _openEditItem,
                   onRestoreStock: _onRestoreStockItem,
@@ -239,7 +241,8 @@ class _MenuPageBodyState extends State<MenuPageBody>
               }
               if (controller.isOffShelfSelected) {
                 return MenuOffShelfPanel(
-                  controller: controller,
+                  shell: controller,
+                  tab: controller.offShelfTab,
                   bottomInset: _bottomInset(context),
                   onEditItem: _openEditItem,
                   onRelistItem: _onRelistItem,
@@ -247,14 +250,16 @@ class _MenuPageBodyState extends State<MenuPageBody>
               }
               if (controller.isComboSelected) {
                 return MenuComboSection(
-                  controller: controller,
+                  shell: controller,
+                  tab: controller.comboTab,
                   bottomInset: _bottomInset(context),
                   onAddCombo: _showAddComboDialog,
                   onConfigureCombo: _openComboForm,
                 );
               }
               return MenuCategorySection(
-                controller: controller,
+                shell: controller,
+                tab: controller.categoryTab,
                 bottomInset: _bottomInset(context),
                 onAddCategory: _showAddCategoryDialog,
                 onAddItem: _openAddItem,
@@ -316,7 +321,7 @@ class _MenuPageBodyState extends State<MenuPageBody>
 
   Future<void> _openAddItem() async {
     final storeId = controller.selectedStoreId.value;
-    final category = controller.selectedCategory;
+    final category = controller.categoryTab.selectedCategory;
     if (storeId == null || category == null) return;
 
     final created = await Get.to<bool>(
@@ -327,7 +332,7 @@ class _MenuPageBodyState extends State<MenuPageBody>
       ),
     );
     if (created == true) {
-      await controller.refreshCurrentPanel();
+      await controller.refreshActiveTab();
     }
   }
 
@@ -338,7 +343,7 @@ class _MenuPageBodyState extends State<MenuPageBody>
     final categoryName =
         item.categoryName.isNotEmpty
             ? item.categoryName
-            : controller.selectedCategory?.name ??
+            : controller.categoryTab.selectedCategory?.name ??
                 StoreMenuI18n.unknownCategory.tr;
 
     final saved = await Get.to<bool>(
@@ -351,7 +356,7 @@ class _MenuPageBodyState extends State<MenuPageBody>
       ),
     );
     if (saved == true) {
-      await controller.refreshCurrentPanel();
+      await controller.refreshActiveTab();
     }
   }
 
@@ -359,34 +364,56 @@ class _MenuPageBodyState extends State<MenuPageBody>
     final storeId = controller.selectedStoreId.value;
     if (storeId == null) return;
 
-    final combo = controller.selectedCombo;
+    final combo = controller.comboTab.selectedCombo;
 
     final saved = await Get.to<bool>(
       () => MenuComboFormPage(
         storeId: storeId,
         comboId: combo?.id,
-        initialDetail: controller.comboDetail.value,
+        initialDetail: controller.comboTab.comboDetail.value,
       ),
     );
     if (saved == true) {
-      await controller.refreshCurrentPanel();
+      await controller.refreshActiveTab();
     }
   }
 
-  Future<bool> _onMarkSoldOutItem(MenuItemListModel item) {
-    return controller.updateItemSoldOut(itemId: item.id, soldOut: true);
+  Future<bool> _onMarkSoldOutItem(MenuItemListModel item) async {
+    final storeId = controller.selectedStoreId.value;
+    if (storeId == null) return false;
+    return controller.categoryTab.updateItemSoldOut(
+      storeId: storeId,
+      itemId: item.id,
+      soldOut: true,
+    );
   }
 
-  Future<bool> _onTakeOffShelfItem(MenuItemListModel item) {
-    return controller.updateItemStatus(itemId: item.id, status: 'off_sale');
+  Future<bool> _onTakeOffShelfItem(MenuItemListModel item) async {
+    final storeId = controller.selectedStoreId.value;
+    if (storeId == null) return false;
+    return controller.categoryTab.updateItemStatus(
+      storeId: storeId,
+      itemId: item.id,
+      status: 'off_sale',
+    );
   }
 
   Future<void> _onRestoreStockItem(MenuItemListModel item) async {
-    await controller.updateItemSoldOut(itemId: item.id, soldOut: false);
+    final storeId = controller.selectedStoreId.value;
+    if (storeId == null) return;
+    await controller.soldOutTab.restoreStock(
+      storeId: storeId,
+      itemId: item.id,
+    );
   }
 
   Future<void> _onRelistItem(MenuItemListModel item) async {
-    await controller.updateItemStatus(itemId: item.id, status: 'on_sale');
+    final storeId = controller.selectedStoreId.value;
+    if (storeId == null) return;
+    await controller.offShelfTab.relistItem(
+      storeId: storeId,
+      itemId: item.id,
+    );
   }
 
   MenuDishCategoryActions _categoryActionsFor(MenuItemListModel item) {

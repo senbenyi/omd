@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:store/module/a_color/store_colors.dart';
 import 'package:store/module/menu/menu_i18n.dart';
 import 'package:store/module/menu/menu_price_utils.dart';
-import 'package:store/module/menu/menu_core_widgets.dart';
+import 'package:store/module/menu/combo/menu_combo_ui.dart';
 
 /// 套餐详情顶栏：原价划线 + 套餐价红色突出。
 class MenuComboDetailHeader extends StatelessWidget {
@@ -32,7 +32,7 @@ class MenuComboDetailHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 10.h),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: MenuLayout.divider)),
+        border: Border(bottom: BorderSide(color: MenuComboLayout.divider)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -166,12 +166,12 @@ class MenuComboDishListTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: MenuLayout.divider.withValues(alpha: 0.6)),
+        border: Border.all(color: MenuComboLayout.divider.withValues(alpha: 0.6)),
       ),
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
       child: Row(
         children: [
-          MenuDishThumbnail(name: name, size: 40),
+          _MenuComboDishThumb(name: name),
           SizedBox(width: 8.w),
           Expanded(
             child: Column(
@@ -205,6 +205,40 @@ class MenuComboDishListTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MenuComboDishThumb extends StatelessWidget {
+  const _MenuComboDishThumb({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial =
+        name.isNotEmpty ? String.fromCharCode(name.runes.first) : '?';
+    return Container(
+      width: 40.w,
+      height: 40.w,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.r),
+        gradient: LinearGradient(
+          colors: [
+            StoreColors.tabSelected.withValues(alpha: 0.18),
+            StoreColors.tabSelected.withValues(alpha: 0.06),
+          ],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w700,
+          color: StoreColors.tabSelected,
+        ),
       ),
     );
   }

@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store/module/a_color/store_colors.dart';
+import 'package:store/module/menu/category/menu_categoty_dish_item.dart';
+import 'package:store/module/menu/category/menu_category_tab_controller.dart';
+import 'package:store/module/menu/category/menu_category_ui.dart';
+import 'package:store/module/menu/category/memu_category_left_tab.dart';
 import 'package:store/module/menu/menu_i18n.dart';
 import 'package:store/module/menu/menu_models.dart';
-import 'package:store/module/menu/category/menu_categoty_dish_item.dart';
-import 'package:store/module/menu/category/menu_category_widgets.dart';
-import 'package:store/module/menu/category/memu_category_left_tab.dart';
-import 'package:store/module/menu/menu_core_widgets.dart';
 import 'package:store/module/menu/store_tab_menu_controller.dart';
 
 /// 分类 Tab：左侧分类栏 + 右侧菜品列表。
 class MenuCategorySection extends StatelessWidget {
   const MenuCategorySection({
     super.key,
-    required this.controller,
+    required this.shell,
+    required this.tab,
     required this.bottomInset,
     required this.onAddCategory,
     required this.onAddItem,
@@ -22,7 +23,8 @@ class MenuCategorySection extends StatelessWidget {
     required this.categoryActionsFor,
   });
 
-  final StoreTabMenuController controller;
+  final StoreTabMenuController shell;
+  final MenuCategoryTabController tab;
   final double bottomInset;
   final VoidCallback onAddCategory;
   final VoidCallback onAddItem;
@@ -35,14 +37,16 @@ class MenuCategorySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         MenuCategoryLeftTab(
-          controller: controller,
+          shell: shell,
+          tab: tab,
           bottomInset: bottomInset,
           onAddCategory: onAddCategory,
         ),
-        Container(width: 1, color: MenuLayout.divider),
+        Container(width: 1, color: MenuCategoryLayout.divider),
         Expanded(
           child: MenuCategoryItemPanel(
-            controller: controller,
+            shell: shell,
+            tab: tab,
             bottomInset: bottomInset,
             onAddItem: onAddItem,
             onEditItem: onEditItem,
@@ -57,14 +61,16 @@ class MenuCategorySection extends StatelessWidget {
 class MenuCategoryItemPanel extends StatelessWidget {
   const MenuCategoryItemPanel({
     super.key,
-    required this.controller,
+    required this.shell,
+    required this.tab,
     required this.bottomInset,
     required this.onAddItem,
     required this.onEditItem,
     required this.categoryActionsFor,
   });
 
-  final StoreTabMenuController controller;
+  final StoreTabMenuController shell;
+  final MenuCategoryTabController tab;
   final double bottomInset;
   final VoidCallback onAddItem;
   final ValueChanged<MenuItemListModel> onEditItem;
@@ -73,29 +79,29 @@ class MenuCategoryItemPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final category = controller.selectedCategory;
-      final itemList = controller.items.toList(growable: false);
-      final loadingItems = controller.isLoadingItems.value;
+      final category = tab.selectedCategory;
+      final itemList = tab.items.toList(growable: false);
+      final loadingItems = tab.isLoadingItems.value;
       final loadingSidebar =
-          controller.isLoadingSidebar.value && controller.categories.isEmpty;
+          tab.isLoadingSidebar.value && tab.categories.isEmpty;
 
       if (loadingSidebar) {
         return const Center(child: CircularProgressIndicator());
       }
 
       if (category == null) {
-        if (controller.categories.isEmpty) {
+        if (tab.categories.isEmpty) {
           return Center(
-            child: MenuEmptyState(
+            child: MenuCategoryEmptyState(
               message: StoreMenuI18n.noCategoryHint.tr,
               actionHint: StoreMenuI18n.addCategory.tr,
             ),
           );
         }
-        if (controller.isLoadingItems.value || controller.isLoadingSidebar.value) {
+        if (tab.isLoadingItems.value) {
           return const Center(child: CircularProgressIndicator());
         }
-        return MenuEmptyState(message: StoreMenuI18n.noCategory.tr);
+        return MenuCategoryEmptyState(message: StoreMenuI18n.noCategory.tr);
       }
 
       return ColoredBox(
@@ -103,7 +109,7 @@ class MenuCategoryItemPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            MenuPanelHeader(
+            MenuCategoryPanelHeader(
               title: category.name,
               leadingIcon: Icons.restaurant_menu_outlined,
               subtitle: StoreMenuI18n.itemCount.trParams({
@@ -112,7 +118,10 @@ class MenuCategoryItemPanel extends StatelessWidget {
             ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: controller.refreshCurrentPanel,
+                onRefresh: () async {
+                  final storeId = shell.selectedStoreId.value;
+                  if (storeId != null) await tab.reload(storeId);
+                },
                 color: StoreColors.tabSelected,
                 child: _buildItemList(
                   itemList: itemList,
@@ -122,7 +131,7 @@ class MenuCategoryItemPanel extends StatelessWidget {
                 ),
               ),
             ),
-            MenuAddActionBar(
+            MenuCategoryAddActionBar(
               label: StoreMenuI18n.addItem.tr,
               onTap: onAddItem,
               bottomInset: bottomInset,
@@ -155,7 +164,7 @@ class MenuCategoryItemPanel extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: 80.h),
-          MenuEmptyState(
+          MenuCategoryEmptyState(
             message: StoreMenuI18n.emptyItems.tr,
             actionHint: StoreMenuI18n.addItem.tr,
           ),
