@@ -1,0 +1,180 @@
+---
+description: 列表页面代码风格规范 - GetX、NineRefresh、API、Model 命名与结构
+globs: "**/*_page.dart,**/*_controller.dart,**/*_logic.dart,**/*_api.dart,**/*_item.dart,**/*_widget.dart,**/*_model.dart,**/*_models.dart"
+alwaysApply: false
+---
+
+# 列表页面代码风格规范
+
+遵循本规范编写或优化列表相关代码。主要入口参考 [main.dart](mdc:lib/main.dart)。
+
+## 1. 状态管理与刷新
+
+- **使用 GetX 响应式刷新**：`Obx()` 包裹需响应式更新的 UI，Controller 中用 `.obs` 定义可观察变量
+- 列表数据、加载状态、分页等统一用 `Rx` 变量
+
+```dart
+// Controller
+final list = <ItemModel>[].obs;
+var isLoading = false.obs;
+var currentPage = 1.obs;
+
+// View
+Obx(() => ListView.builder(itemCount: controller.list.length, ...));
+```
+
+## 2. 文件命名与职责
+
+| 类型 | 命名规则 | 说明 |
+|------|----------|------|
+| 列表页面 | `xxx_page.dart` | 按功能命名，如 `collection_collect_page.dart` |
+| 列表项 | `xxx_item.dart` | 优先单独文件；代码简单可内联在 page 中 |
+| 非列表 UI 组件 | `xxx_widget.dart` | 业务复杂或可复用时单独创建 |
+| API 接口 | `xxx_api.dart` | 使用 static 方法 |
+| 数据模型 | `xxx_model.dart` 或 `xxx_models.dart` | 单实体用 model；多类/聚合用 models，按功能放在对应模块内 |
+
+## 3. GetxController 与 Binding
+
+- **功能简单**：不使用 Binding，在页面的 `initState()` 中 `Get.put(XXXController())`，`dispose()` 中 `Get.delete<XXXController>()`
+- **功能复杂**（多 Controller、路由依赖等）：使用 Binding 注册
+
+```dart
+@override
+void initState() {
+  super.initState();
+  controller = Get.put(XXXController());
+}
+@override
+void dispose() {
+  Get.delete<XXXController>();
+  super.dispose();
+}
+```
+
+## 4. API 接口层
+
+- 文件：`xxx_api.dart`
+- 使用 `static` 函数调用 `NOHttp.instance.post()`
+- 返回类型：`NineBaseResponse` / `PageListData` / 自定义（对 `NineBaseResponse` 二次处理）
+
+```dart
+class XxxApi {
+  static Future<PageListData> getList({int page = 1}) async {
+    NineBaseResponse response = await NOHttp.instance.post(
+      url: "/Web/xxx",
+      params: {"PageIndex": page, "PageSize": 10},
+      needRequetEncry: false,
+    );
+    return PageListData.fromResponse(response, listKey: "items");
+  }
+}
+```
+
+- `PageListData.fromResponse()` 默认 `listKey: "items"`；若接口用 `data` 等，可用 `PageListData.fromResponseTwo(response, listKey: "data")`
+- **接口 URL**：用 `static String xxx = "/Web/Xxx";` 并加注释（如 `// 接口说明(不加密)`）
+- **返回兜底**：对 `response.data` 做类型判断（`data is Map` / `data is List`），异常或非预期类型时返回空列表或空结构，避免调用方 NPE
+
+## 5. 下拉刷新与上拉加载（NineRefresh）
+
+- 使用 `NineRefresh` 包裹列表，配合 `NineRefreshController`
+- Controller 中声明：`NineRefreshController refreshController = NineRefreshController();`
+- 必须正确处理：
+  - **成功**：`finishRefresh()` / `finishLoad()`
+  - **失败**：`finishRefreshFail()` / `finishLoadFail()`
+  - **加载完全部**：`finishNoMore()`
+- 建议继承 `BaseListpageLogic` 管理 `currentPage`、`totalPages`、`isLoading` 等
+
+```dart
+// 下拉刷新
+onRefresh: () => controller.loadData(isFresh: true),
+// 上拉加载
+onLoad: () => controller.loadData(isFresh: false),
+```
+
+```dart
+void _finishLoading({required bool isFresh, bool failed = false}) {
+  if (failed) {
+    isFresh ? refreshController.finishRefreshFail() : refreshController.finishLoadFail();
+    return;
+  }
+  if (isFresh) {
+    refreshController.finishRefresh();
+    return;
+  }
+  if (currentPage.value >= totalPages.value) {
+    refreshController.finishNoMore();
+  } else {
+    refreshController.finishLoad();
+  }
+}
+```
+
+- 加载失败时需恢复页码：`currentPage = previousPage`（若用局部变量 `_currentPage` 则 `_currentPage = previousPage`）
+- **列表更新**：`isFresh` 时用 `list.assignAll(res.items)`，否则 `list.addAll(res.items)`；不在请求前对列表 `clear()`，避免下拉刷新时先清空再请求导致中间态空白
+
+## 6. Model 文件
+
+- 命名：单实体 `xxx_model.dart`；同一模块内多类/聚合用 `xxx_models.dart`
+- **按功能归属**：模型放在使用它的模块目录下，不设跨模块的公共 models 目录（如 theme 下 hot_ranking、theme_content、actress 各自有 `*_models.dart`）
+- 提供 `fromJson(Map<String, dynamic>)` 工厂方法，必要时提供 `toJson()`
+- 列表数据解析：`data.items.map((e) => XxxModel.fromJson(e as Map<String, dynamic>)).toList()`
+
+## 7. 页面结构建议
+
+- 加载中且列表为空：显示 `MG51AnimatedLogo` 等加载占位
+- 加载完成且列表为空：显示 `EmptyDataWidget`
+- 有数据时：用 `NineRefresh` + `ListView`/`GridView` 等
+
+## 8. 参考实现
+
+- 收藏列表：[collection_collect_page.dart](mdc:packages/module/lib/mine/collection/pages/video/collection_collect_view.dart)、[collection_collect_controller.dart](mdc:packages/module/lib/mine/collection/pages/video/collection_collect_controller.dart)、[collection_collect_api.dart](mdc:packages/module/lib/mine/collection/pages/video/collection_collect_api.dart)
+- 分页基类：[base_listpage_logic.dart](mdc:packages/base/lib/module/base_listpage_logic.dart)
+- 刷新组件：[nine_refresh.dart](mdc:packages/common/lib/refresh/nine_refresh.dart)
+
+## 9. Theme 模块约定（多 Tab + 子模块列表/详情）
+
+以下为 [theme](mdc:packages/module/lib/video/video/theme) 模块的代码风格，新增或修改 theme 相关代码时请保持一致。
+
+### 9.1 目录与模块划分
+
+- **顶层**：`theme/theme_page.dart` 为 Tab 容器页（热门榜 / 主题 / 女优），使用 `StatefulWidget` + `TabController`，子页用 `TabBarView` 放入对应 Page。
+- **子模块按功能一目录一模块**：每个 Tab 对应一个子目录，如 `hot_ranking/`、`theme_content/`、`actress/`。
+- **模块内文件**：同一模块下使用统一前缀，如 `hot_ranking_page.dart`、`hot_ranking_controller.dart`、`hot_ranking_api.dart`、`hot_ranking_models.dart`。
+- **有详情时**：在对应列表模块下再建子目录，如 `actress/actorDetails/`，内含 `actor_detail_page.dart`、`actor_detail_controller.dart`、`actor_detail_api.dart`、`actor_video_list_widget.dart`；详情页所需模型可放在上级模块的 `*_models.dart` 中（如 `Actor` 放在 `actress_models.dart`）。
+
+### 9.2 模型归属与命名
+
+- 模型**按功能归属到对应子模块**，不设统一的 `theme/models/`。
+- 每个子模块一个 `xxx_models.dart`（如 `theme_content_models.dart`、`actress_models.dart`、`hot_ranking_models.dart`），内含该模块所需的请求/响应/实体类及静态配置（如排序、分类的 `options`）。
+
+### 9.3 API 层
+
+- 类内接口 URL：`static String xxx = "/Web/Xxx"; // 说明(不加密)"`。
+- 请求：`NOHttp.instance.post(url: xxx, params: ..., needRequetEncry: false)`。
+- 返回：对 `response.data` 做 `data is Map` / `data is List` 等判断，解析成强类型；非预期类型或异常时返回空列表或空结构（如 `return [];` 或 `return XxxResponse(items: [], ...);`）。
+
+### 9.4 Controller
+
+- **列表子页**：继承 `BaseListpageLogic`，持有 `NineRefreshController`、`final list = <T>[].obs`，在 `onInit()` 里调 `loadData(isFresh: true)`，在 `onClose()` 里 `refreshController.dispose()`。
+- **非列表子页**（如仅主题切换）：直接用 `GetxController`，如 `ThemeContentController`。
+- **详情子页**：使用 `GetxController`（不继承 BaseListpageLogic），从 `Get.arguments?['actorId']` 等取参数，在 `onInit()` 中请求详情与列表；页面可用 `GetView<XxxController>` + `GetBuilder(init: XxxController(), builder: ...)` 或由路由处 `Get.put(Controller())` 注入。
+
+### 9.5 列表加载与刷新
+
+- `loadData({required bool isFresh})`：`isFresh` 时置 `currentPage=1` 并请求第一页，否则 `currentPage++` 请求下一页。
+- 请求前**不**对列表 `clear()`，避免下拉刷新时先清空再请求导致中间空白。
+- 成功：`isFresh` 时 `list.assignAll(res.items)`，否则 `list.addAll(res.items)`；并更新 `totalPages` / `_totalPages`。
+- 失败：非 `isFresh` 时恢复页码（如 `_currentPage = previousPage`），并调用 `refreshController.finishRefreshFail()` / `finishLoadFail()`。
+- `_finishLoading(isFresh, failed)`：根据是否失败、是否首次刷新、是否还有更多，调用 `finishRefresh` / `finishLoad` / `finishNoMore` / `finishRefreshFail` / `finishLoadFail`。
+
+### 9.6 页面与 Controller 生命周期
+
+- 列表/主题等**子 Tab 页**：`StatefulWidget`，在 `initState()` 中 `controller = Get.put(XXXController())`，在 `dispose()` 中 `Get.delete<XXXController>()`，不在路由层用 Binding。
+- 详情页若需保留状态：可对 State 使用 `AutomaticKeepAliveClientMixin`，`wantKeepAlive => true`。
+
+
+### 9.7 导入约定
+
+- **模块内**：相对路径，如 `import 'theme_content_controller.dart';`、`import 'theme_content_models.dart';`。
+- **同模块子目录**：相对路径，如 `import './actorDetails/actor_detail_page.dart';`。
+- **跨 package**：完整 package 路径，如 `import 'package:module/video/video/theme/actress/actress_models.dart';`（子目录中的文件引用上级模块的 models 时）。

@@ -1,0 +1,35 @@
+---
+globs: lib/**/*.dart
+---
+# Flutter UI开发规范
+
+## 屏幕适配
+- 使用 `flutter_screenutil` 进行屏幕适配
+- 尺寸使用 `.w` (宽度), `.h` (高度), `.sp` (字体大小)
+- 参考 [app_dimen.dart](mdc:lib/common/res/app_dimen.dart)
+
+## 文本样式
+- 默认使用中文字体 [pingFangTextStyle](mdc:lib/common/res/app_style.dart)
+- 文字样式定义在 [app_style.dart](mdc:lib/common/res/app_style.dart)
+- 支持不同字重和大小
+
+## 颜色和样式
+- 主题颜色通过 [app_theme.dart](mdc:packages/base/lib/theme/app_theme.dart) 中的 `appColor` 获取（按渠道注入不同的 `BaseColorTheme` 实现）
+- 文字样式定义在 [app_style.dart](mdc:lib/common/res/app_style.dart)
+- 图标字体定义在 [my_icon_font.dart](mdc:lib/common/res/my_icon_font.dart)
+
+## 图片资源
+- 图片资源位于 [assets/images/](mdc:assets/images/)
+- 使用 [Assets](mdc:lib/generated/assets.dart) 类引用资源
+- 支持SVG、PNG、WebP格式
+
+## 组件开发
+- 通用组件放在 [lib/widgets/](mdc:lib/widgets/)
+- 页面专用组件放在对应页面的 `widgets/` 目录
+- 使用 `WidgetExtension` 扩展方法简化代码
+```
+
+description:
+globs:
+alwaysApply: false
+---

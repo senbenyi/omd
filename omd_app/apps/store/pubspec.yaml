@@ -1,0 +1,38 @@
+name: store_app
+description: Store application shell.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  get: ^4.6.5
+  flutter_screenutil: ^5.8.4
+  flutter_easyloading: ^3.0.5
+  oktoast: ^3.4.0
+  common:
+    path: ../../packages/common
+  base:
+    path: ../../packages/base
+  network:
+    path: ../../packages/network
+  store:
+    path: ../../packages/store
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+dependency_overrides:
+  package_info_plus: ^9.0.0
+  share_plus: ^12.0.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/channel_config.json

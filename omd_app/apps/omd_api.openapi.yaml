@@ -1,0 +1,1230 @@
+openapi: 3.1.0
+info:
+  title: 餐饮店菜单管理 API | v1
+  version: 1.0.0
+  description: |
+    面向**餐饮店老板端 APP** 的菜单管理接口契约。  
+    **本文件仅使用 `GET`（查询）与 `POST`（提交/变更）两种 HTTP 方法。**
+
+    > **文档阅读说明**：各接口下方直接写出路径/Query/Body 参数与返回字段；**公共请求头见第二节**，单个接口不再重复列出。
+
+    ---
+
+    ## 一、环境域名
+
+    | 环境 | Base URL | 说明 |
+    |------|----------|------|
+    | **生产（prod）** | `https://api.offergo.com/restaurant/v1` | 线上正式环境 |
+    | **开发（dev）** | `https://dev-api.offergo.com/restaurant/v1` | 联调、测试环境 |
+
+    ---
+
+    ## 二、统一请求头（全局，各接口默认遵循）
+
+    除标注「无需鉴权」的接口外，均需携带 **Authorization**。所有 **POST** Body 为 JSON。
+
+    | Header 名称 | 必填 | 示例 | 作用 |
+    |-------------|------|------|------|
+    | `Content-Type` | POST 必填 | `application/json` | 请求体类型 |
+    | `Accept` | 建议 | `application/json` | 期望响应为 JSON |
+    | `Authorization` | 除登录外必填 | `Bearer eyJhbGciOi...` | 登录后 `data.token` |
+    | `X-App-Version` | 建议 | `1.2.0` | 客户端版本号 |
+    | `X-Platform` | 建议 | `ios` / `android` | 运行平台 |
+    | `X-Device-Id` | 建议 | `A1B2C3D4-...` | 设备唯一标识 |
+    | `X-Request-Id` | 建议 | UUID | 请求链路 ID |
+    | `Accept-Language` | 可选 | `zh-CN` | 错误文案语言 |
+
+    ---
+
+    ## 三、统一返回格式
+
+    HTTP 状态码表示传输层；**业务成败看 Body 中 `code`（string）**。
+
+    ```json
+    { "code": "0", "message": "ok", "data": {} }
+    ```
+
+    | 字段 | 类型 | 说明 |
+    |------|------|------|
+    | `code` | string | `"0"` 成功；非 `"0"` 业务失败 |
+    | `message` | string | 提示文案 |
+    | `data` | object / array / null | 业务数据 |
+
+    常见业务码：`0` 成功 · `1001` 参数错误 · `1002` Token 失效 · `4001` 分类下有菜不可删 · `4002` 上架中不可删 · `4010` 无门店权限
+
+    ---
+
+    ## 四、接口总览
+
+    ### 4.1 应用配置
+    | 方法 | 路径 | 说明 |
+    |------|------|------|
+    | GET | `/app/config` | App 全局配置（无需登录） |
+
+    ### 4.2 认证
+    | 方法 | 路径 | 说明 |
+    |------|------|------|
+    | POST | `/auth/login` | 密码登录（返回 token、用户信息） |
+    | POST | `/auth/register` | 注册（返回 token、用户信息） |
+
+    ### 4.3 门店
+    | 方法 | 路径 | 说明 |
+    |------|------|------|
+    | GET | `/stores` | 门店列表（含地址、联系人、服务信息） |
+    | GET | `/stores/{storeId}` | 门店详情 |
+    | POST | `/stores/save` | 新增/编辑店铺 |
+
+    ### 4.4 菜单分类
+    | 方法 | 路径 | 说明 |
+    |------|------|------|
+    | GET | `/stores/{storeId}/menu/categories` | 分类列表 |
+    | POST | `/stores/{storeId}/menu/categories/save` | 新增/编辑分类 |
+    | POST | `/stores/{storeId}/menu/categories/remove` | 删除分类 |
+
+    ### 4.5 菜单菜品
+    | 方法 | 路径 | 说明 |
+    |------|------|------|
+    | GET | `/stores/{storeId}/menu/items` | 菜品分页列表 |
+    | GET | `/stores/{storeId}/menu/items/{itemId}` | 菜品详情 |
+    | POST | `/stores/{storeId}/menu/items/save` | 新增/编辑菜品 |
+    | POST | `/stores/{storeId}/menu/items/remove` | 删除菜品 |
+    | POST | `/stores/{storeId}/menu/items/status` | 上架/下架 |
+    | POST | `/stores/{storeId}/menu/items/sort` | 批量排序 |
+
+    ### 4.6 菜单套餐
+    | 方法 | 路径 | 说明 |
+    |------|------|------|
+    | GET | `/stores/{storeId}/menu/combos` | 套餐列表 |
+    | GET | `/stores/{storeId}/menu/combos/{comboId}` | **套餐详情（价格 + 包含菜品）** |
+    | POST | `/stores/{storeId}/menu/combos/save` | **保存套餐（名称 + 价格 + 菜品）** |
+    | POST | `/stores/{storeId}/menu/combos/{comboId}/save-content` | 保存套餐内容（价格 + 菜品） |
+
+    ---
+
+    ## 五、通用约定
+    - 金额：**分**（integer） · 时间：`yyyy-MM-dd HH:mm:ss` · `POST .../save` 无 `id` 新增，有 `id` 编辑
+
+servers:
+  - url: https://api.offergo.com/restaurant/v1
+    description: 生产（prod）
+  - url: https://dev-api.offergo.com/restaurant/v1
+    description: 开发（dev）
+
+tags:
+  - name: 应用配置
+  - name: 认证
+  - name: 门店
+  - name: 菜单分类
+  - name: 菜单菜品
+  - name: 菜单套餐
+
+security:
+  - BearerAuth: []
+
+paths:
+  /app/config:
+    get:
+      tags: [应用配置]
+      summary: App 全局配置
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **否**（启动时可先拉取） |
+        | 路径/Query/Body | 无 |
+
+        **返回 data 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | customerServicePhone | string | 客服电话 |
+        | imageDomain | string | 图片 CDN 域名，如 `https://cdn.example.com` |
+        | officialWebsite | string | 官网地址 |
+        | customerServiceEmail | string | 客服邮箱 |
+        | technicalSupportPhone | string | 技术支持电话 |
+      operationId: getAppConfig
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  customerServicePhone: "400-800-1234"
+                  imageDomain: https://cdn.offergo.com
+                  officialWebsite: https://www.offergo.com
+                  customerServiceEmail: support@offergo.com
+                  technicalSupportPhone: "400-800-5678"
+
+  /auth/login:
+    post:
+      tags: [认证]
+      summary: 密码登录
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **否**（勿传 Authorization） |
+        | 请求头 | 仅需第二节中 POST 通用头（Content-Type 等），**不需要** Authorization |
+
+        **Body 参数（JSON）**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | phone | string | 是 | 手机号 |
+        | password | string | 是 | 密码（至少 6 位） |
+
+        **返回 data 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | token | string | 访问令牌，后续 Header 使用 |
+        | userId | string | 用户 Id |
+        | username | string | 用户名 / 昵称 |
+        | phone | string | 脱敏手机号，如 138****8000 |
+      operationId: authLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  type: string
+                  example: "13800138000"
+                password:
+                  type: string
+                  example: "abc123456"
+            example:
+              phone: "13800138000"
+              password: "abc123456"
+      responses:
+        '200':
+          description: code 为 "0" 时登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                    example: "0"
+                  message:
+                    type: string
+                    example: ok
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      userId:
+                        type: string
+                      username:
+                        type: string
+                      phone:
+                        type: string
+              example:
+                code: "0"
+                message: ok
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  userId: "90001"
+                  username: 王老板
+                  phone: "138****8000"
+
+  /auth/register:
+    post:
+      tags: [认证]
+      summary: 注册
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **否**（勿传 Authorization） |
+
+        **Body 参数（JSON）**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | phone | string | 是 | 手机号 |
+        | password | string | 是 | 密码（至少 6 位） |
+        | username | string | 否 | 昵称，未填时系统自动生成 |
+
+        **返回 data 字段**：同 POST /auth/login
+      operationId: authRegister
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  type: string
+                  example: "13900139000"
+                password:
+                  type: string
+                  example: "abc123456"
+                username:
+                  type: string
+                  example: "新老板"
+            example:
+              phone: "13900139000"
+              password: "abc123456"
+              username: "新老板"
+      responses:
+        '200':
+          description: code 为 "0" 时注册成功并自动登录
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  userId: "90002"
+                  username: 新老板
+                  phone: "139****9000"
+
+  /stores:
+    get:
+      tags: [门店]
+      summary: 我的门店列表
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+        | 路径/Query/Body | 无 |
+
+        **返回 data**：门店数组，元素字段如下
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | id | integer | 门店 Id |
+        | name | string | 门店名称 |
+        | status | string | open=营业 closed=打烊 rest=休息 |
+        | address | string | 门店地址 |
+        | phone | string | 门店电话 |
+        | contactName | string | 联系人姓名 |
+        | businessHours | object | 营业时间，见下表 |
+        | closedWeekdays | integer[] | 定休日，1=周一 … 7=周日 |
+        | serviceInfo | object | 服务信息，见下表 |
+
+        **businessHours 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | isOpen24Hours | boolean | 是否 24 小时营业 |
+        | openTime | integer | 开始时间戳（毫秒，距本地 00:00），`isOpen24Hours=true` 时为 null |
+        | closeTime | integer | 结束时间戳（毫秒，距本地 00:00），`isOpen24Hours=true` 时为 null |
+
+        **serviceInfo 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | serviceExpireAt | string | 服务到期时间，yyyy-MM-dd HH:mm:ss |
+        | vipLevel | integer | VIP 等级 |
+        | referrerId | string | 推荐人 Id |
+        | additionalPeriod | integer | 附加期限（天） |
+      operationId: listMyStores
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  - id: 20001
+                    name: 老王牛肉面（人民路店）
+                    status: open
+                    address: 东京都台东区上野 1-2-3
+                    phone: "03-1234-5678"
+                    contactName: 王小明
+                    businessHours:
+                      isOpen24Hours: false
+                      openTime: 32400000
+                      closeTime: 79200000
+                    closedWeekdays: [2]
+                    serviceInfo:
+                      serviceExpireAt: "2027-12-31 23:59:59"
+                      vipLevel: 2
+                      referrerId: "80001"
+                      additionalPeriod: 30
+
+  /stores/{storeId}:
+    get:
+      tags: [门店]
+      summary: 门店详情
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+
+        **路径参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | storeId | integer | 是 | 门店 Id |
+
+        **返回 data**：门店对象（字段同 GET /stores 列表元素）
+      operationId: getStoreDetail
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20001
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 20001
+                  name: 老王牛肉面（人民路店）
+                  status: open
+                  address: 东京都台东区上野 1-2-3
+                  phone: "03-1234-5678"
+                  contactName: 王小明
+                  businessHours:
+                    isOpen24Hours: false
+                    openTime: 32400000
+                    closeTime: 79200000
+                  closedWeekdays: [2]
+                  serviceInfo:
+                    serviceExpireAt: "2027-12-31 23:59:59"
+                    vipLevel: 2
+                    referrerId: "80001"
+                    additionalPeriod: 30
+
+  /stores/save:
+    post:
+      tags: [门店]
+      summary: 新增或编辑店铺
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | id | integer | 否 | 有值=编辑，无值=新增 |
+        | name | string | 是 | 店铺名称 |
+        | address | string | 是 | 门店地址 |
+        | phone | string | 是 | 门店电话 |
+        | contactName | string | 是 | 联系人姓名 |
+        | vipLevel | integer | 是 | VIP 等级 |
+        | referrerId | string | 否 | 推荐人 Id |
+        | status | string | 编辑可选 | open=营业 closed=打烊 rest=休息（新增默认 rest） |
+        | businessHours | object | 否 | 营业时间，见 GET /stores |
+        | closedWeekdays | integer[] | 否 | 定休日，1=周一 … 7=周日 |
+
+        **返回 data**：保存后的门店对象（字段同 GET /stores 列表元素）
+      operationId: saveStore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              create:
+                value:
+                  name: 老王牛肉面（上野店）
+                  address: 东京都台东区上野 4-5-6
+                  phone: "03-8765-4321"
+                  contactName: 王小明
+                  vipLevel: 1
+                  referrerId: "80001"
+                  businessHours:
+                    isOpen24Hours: true
+                  closedWeekdays: [1, 7]
+              update:
+                value:
+                  id: 20001
+                  name: 老王牛肉面（人民路店）
+                  address: 东京都台东区上野 1-2-3
+                  phone: "03-1234-5678"
+                  contactName: 王小明
+                  vipLevel: 2
+                  status: open
+                  businessHours:
+                    isOpen24Hours: false
+                    openTime: 32400000
+                    closeTime: 79200000
+                  closedWeekdays: [2]
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 20002
+                  name: 老王牛肉面（上野店）
+                  status: rest
+                  address: 东京都台东区上野 4-5-6
+                  phone: "03-8765-4321"
+                  contactName: 王小明
+                  serviceInfo:
+                    serviceExpireAt: "2027-06-30 23:59:59"
+                    vipLevel: 1
+                    referrerId: "80001"
+                    additionalPeriod: 0
+
+  /stores/{storeId}/menu/categories:
+    get:
+      tags: [菜单分类]
+      summary: 分类列表
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+
+        **路径参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | storeId | integer | 是 | 门店 Id |
+
+        **返回 data**：分类数组
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | id | integer | 分类 Id |
+        | name | string | 分类名称 |
+        | sort | integer | 排序，越小越靠前 |
+        | itemCount | integer | 该分类下菜品数 |
+      operationId: listMenuCategories
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20001
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  - id: 1001
+                    name: 招牌热菜
+                    sort: 10
+                    itemCount: 12
+
+  /stores/{storeId}/menu/categories/save:
+    post:
+      tags: [菜单分类]
+      summary: 新增或编辑分类
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId（integer，门店 Id）
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | id | integer | 否 | 有值=编辑，无值=新增 |
+        | name | string | 是 | 分类名称 |
+        | sort | integer | 否 | 排序，默认 0 |
+
+        **返回 data**：保存后的分类（字段同分类列表元素）
+      operationId: saveMenuCategory
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: 招牌热菜
+              sort: 10
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 1001
+                  name: 招牌热菜
+                  sort: 10
+                  itemCount: 0
+
+  /stores/{storeId}/menu/categories/remove:
+    post:
+      tags: [菜单分类]
+      summary: 删除分类
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | categoryId | integer | 是 | 要删除的分类 Id |
+
+        **返回 data**：成功时为 null；分类下有菜时 code=4001
+      operationId: removeMenuCategory
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              categoryId: 1001
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data: null
+
+  /stores/{storeId}/menu/items:
+    get:
+      tags: [菜单菜品]
+      summary: 菜品分页列表
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId
+
+        **Query 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | categoryId | integer | 否 | 按分类筛选 |
+        | status | string | 否 | on_sale / off_sale |
+        | keyword | string | 否 | 名称模糊搜索 |
+        | page | integer | 否 | 页码，默认 1 |
+        | pageSize | integer | 否 | 每页条数，默认 20 |
+
+        **返回 data**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | list | array | 菜品列表，元素见「菜品详情」 |
+        | meta.page | integer | 当前页 |
+        | meta.pageSize | integer | 每页条数 |
+        | meta.total | integer | 总条数 |
+      operationId: listMenuItems
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [on_sale, off_sale]
+        - name: keyword
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  list:
+                    - id: 50001
+                      categoryId: 1001
+                      name: 秘制红烧牛肉面
+                      price: 3800
+                      status: on_sale
+                  meta:
+                    page: 1
+                    pageSize: 20
+                    total: 1
+
+  /stores/{storeId}/menu/items/{itemId}:
+    get:
+      tags: [菜单菜品]
+      summary: 菜品详情
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+
+        **路径参数**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | storeId | integer | 门店 Id |
+        | itemId | integer | 菜品 Id |
+
+        **返回 data 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | id | integer | 菜品 Id |
+        | categoryId | integer | 分类 Id |
+        | categoryName | string | 分类名称 |
+        | name | string | 菜品名 |
+        | description | string | 描述 |
+        | price | integer | 售价（分） |
+        | originalPrice | integer | 划线价（分） |
+        | unit | string | 单位，如「份」 |
+        | imageUrl | string | 图片 URL |
+        | tags | string[] | 标签 |
+        | spicyLevel | integer | 0不辣 1微 2中 3重 |
+        | stock | integer | -1 不限库存 |
+        | status | string | on_sale / off_sale |
+        | sort | integer | 排序 |
+        | createdAt | string | 创建时间 |
+        | updatedAt | string | 更新时间 |
+      operationId: getMenuItemDetail
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 50001
+                  categoryId: 1001
+                  categoryName: 招牌热菜
+                  name: 秘制红烧牛肉面
+                  price: 3800
+                  status: off_sale
+                  sort: 100
+                  createdAt: "2026-05-29 10:00:00"
+
+  /stores/{storeId}/menu/items/save:
+    post:
+      tags: [菜单菜品]
+      summary: 新增或编辑菜品
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | id | integer | 否 | 有=编辑，无=新增（新增默认 off_sale） |
+        | categoryId | integer | 新增必填 | 分类 Id |
+        | name | string | 新增必填 | 菜品名 |
+        | description | string | 否 | 描述 |
+        | price | integer | 新增必填 | 售价（分） |
+        | originalPrice | integer | 否 | 划线价（分） |
+        | unit | string | 否 | 默认「份」 |
+        | imageUrl | string | 否 | 图片 |
+        | tags | string[] | 否 | 标签 |
+        | spicyLevel | integer | 否 | 0~3 |
+        | stock | integer | 否 | 默认 -1 |
+        | sort | integer | 否 | 排序 |
+
+        **返回 data**：完整菜品对象（同详情）
+      operationId: saveMenuItem
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              categoryId: 1001
+              name: 秘制红烧牛肉面
+              price: 3800
+              description: 每日现熬牛骨汤
+              spicyLevel: 1
+              stock: -1
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 50001
+                  name: 秘制红烧牛肉面
+                  price: 3800
+                  status: off_sale
+
+  /stores/{storeId}/menu/items/remove:
+    post:
+      tags: [菜单菜品]
+      summary: 删除菜品
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | itemId | integer | 是 | 菜品 Id |
+
+        **返回 data**：成功为 null；上架中删除 code=4002
+      operationId: removeMenuItem
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              itemId: 50001
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data: null
+
+  /stores/{storeId}/menu/items/status:
+    post:
+      tags: [菜单菜品]
+      summary: 上架 / 下架
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | itemId | integer | 是 | 菜品 Id |
+        | status | string | 是 | on_sale=上架 off_sale=下架 |
+
+        **返回 data**：更新后的菜品对象
+      operationId: updateMenuItemStatus
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              itemId: 50001
+              status: on_sale
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 50001
+                  status: on_sale
+
+  /stores/{storeId}/menu/items/sort:
+    post:
+      tags: [菜单菜品]
+      summary: 批量调整排序
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **路径参数**：storeId
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | itemIds | integer[] | 是 | 按展示顺序排列的菜品 Id 列表 |
+
+        **返回 data**：成功为 null
+      operationId: batchSortMenuItems
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              itemIds: [50003, 50001, 50002]
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data: null
+
+  /stores/{storeId}/menu/combos:
+    get:
+      tags: [菜单套餐]
+      summary: 套餐列表
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+
+        **路径参数**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | storeId | integer | 门店 Id |
+
+        **返回 data**：套餐数组
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | id | integer | 套餐 Id |
+        | name | string | 套餐名称 |
+        | sort | integer | 排序 |
+        | price | integer | 套餐售价（分），未配置时为 0 |
+        | itemCount | integer | 包含菜品数量 |
+      operationId: listMenuCombos
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  - id: 2001
+                    name: 商务午餐
+                    sort: 0
+                    price: 5800
+                    itemCount: 3
+
+  /stores/{storeId}/menu/combos/save:
+    post:
+      tags: [菜单套餐]
+      summary: 保存套餐（名称 + 价格 + 菜品）
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        无 `id` 为新增，有 `id` 为编辑。可同时保存套餐名称、售价及包含菜品。
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | id | integer | 否 | 有=编辑，无=新增 |
+        | name | string | 是 | 套餐名称（同店唯一） |
+        | price | integer | 否 | 套餐售价（分），默认 0 |
+        | itemIds | integer[] | 否 | 兼容旧版：菜品 Id 列表（每道默认 1 份） |
+        | items | object[] | 否 | **推荐**：`{ itemId, qty }`，qty 为份数，默认 1 |
+
+        **返回 data**：同套餐详情
+      operationId: saveMenuCombo
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: 商务午餐
+              price: 5800
+              items:
+                - itemId: 50001
+                  qty: 2
+                - itemId: 50002
+                  qty: 1
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 2001
+                  name: 商务午餐
+                  price: 5800
+                  items:
+                    - id: 50001
+                      categoryId: 1001
+                      categoryName: 招牌热菜
+                      name: 秘制红烧牛肉面
+                      price: 3800
+                      status: on_sale
+                      qty: 2
+
+  /stores/{storeId}/menu/combos/{comboId}:
+    get:
+      tags: [菜单套餐]
+      summary: 套餐详情（价格 + 包含菜品）
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是** |
+
+        根据套餐 Id 获取具体内容，含套餐售价及所含菜品列表。
+
+        **路径参数**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | storeId | integer | 门店 Id |
+        | comboId | integer | 套餐 Id |
+
+        **返回 data 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | id | integer | 套餐 Id |
+        | name | string | 套餐名称 |
+        | price | integer | 套餐售价（分） |
+        | items | array | 包含的菜品列表 |
+
+        **items[] 元素**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | id | integer | 菜品 Id |
+        | categoryId | integer | 分类 Id |
+        | categoryName | string | 分类名称 |
+        | name | string | 菜品名称 |
+        | price | integer | 菜品单价（分） |
+        | status | string | on_sale / off_sale |
+        | qty | integer | 套餐内该菜品份数，默认 1 |
+      operationId: getMenuComboDetail
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: comboId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 2001
+                  name: 商务午餐
+                  price: 5800
+                  items:
+                    - id: 50001
+                      categoryId: 1001
+                      categoryName: 招牌热菜
+                      name: 秘制红烧牛肉面
+                      price: 3800
+                      status: on_sale
+                      qty: 2
+                    - id: 50002
+                      categoryId: 1002
+                      categoryName: 饮品
+                      name: 冰柠檬茶
+                      price: 1200
+                      status: on_sale
+                      qty: 1
+
+  /stores/{storeId}/menu/combos/{comboId}/save-content:
+    post:
+      tags: [菜单套餐]
+      summary: 保存套餐内容（价格 + 菜品）
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | POST |
+        | 是否鉴权 | **是** |
+
+        **Body 参数**
+
+        | 字段 | 类型 | 必填 | 说明 |
+        |------|------|------|------|
+        | price | integer | 是 | 套餐售价（分） |
+        | itemIds | integer[] | 否 | 兼容旧版：菜品 Id 列表（每道默认 1 份） |
+        | items | object[] | 否 | **推荐**：`{ itemId, qty }`，至少 1 项 |
+
+        **返回 data**：同套餐详情
+      operationId: saveMenuComboContent
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: comboId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              price: 5800
+              items:
+                - itemId: 50001
+                  qty: 2
+                - itemId: 50002
+                  qty: 1
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  id: 2001
+                  name: 商务午餐
+                  price: 5800
+                  items:
+                    - id: 50001
+                      categoryId: 1001
+                      categoryName: 招牌热菜
+                      name: 秘制红烧牛肉面
+                      price: 3800
+                      status: on_sale
+                      qty: 2
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 见第二节 Authorization；Token 来自 POST /auth/login 的 data.token

@@ -1,0 +1,404 @@
+// TV 专用流水线：仅打包 apps/yuefly；其余参数与根目录 Jenkinsfile 一致
+
+def selectedApps = { buildParams ->
+  def app = (buildParams.APP_NAME ?: 'yuefly').toString().trim()
+  if (app != 'yuefly') {
+    error "jenkins_tv 仅支持 APP_NAME=yuefly（对应 apps/yuefly）"
+  }
+  return [app]
+}
+
+properties([
+  parameters([
+    gitParameter(
+      name: 'BRANCH_NAME',
+      type: 'PT_BRANCH',
+      branchFilter: '.*',
+      defaultValue: 'origin/prod/prod',
+      selectedValue: 'DEFAULT',
+      sortMode: 'DESCENDING',
+      quickFilterEnabled: true,
+      description: '请选择构建的 Git 分支'
+    ),
+    // choice 的 choices 须为「换行分隔」字符串；写 Groovy List 时部分 Jenkins 版本会落成文本框而非下拉框
+    choice(
+      name: 'APP_NAME',
+      choices: 'yuefly',
+      description: 'TV 流水线固定为 apps/yuefly'
+    ),
+    choice(
+      name: 'DEVICE',
+      choices: 'All\nandroid\niOS',
+      description: '请选择构建平台（All=同时打包 iOS+Android）'
+    ),
+    choice(
+      name: 'ENV',
+      choices: 'prod\ndev',
+      description: '请选择构建环境'
+    ),
+  ])
+])
+
+pipeline {
+  agent any
+
+  environment {
+    PATH = "/opt/homebrew/lib/ruby/gems/3.4.0/bin:/usr/local/bin:${env.PATH}"
+    LANG = "en_US.UTF-8"
+    LC_ALL = "en_US.UTF-8"
+    // IMPORTANT: 在 Jenkins 里创建 String 类型凭据，并命名为 telegram_bot_token
+    TELEGRAM_TOKEN = credentials('telegram_bot_token')
+    TELEGRAM_GROUP_ID = credentials('telegram_group_id')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        script {
+          def branch = params.BRANCH_NAME.replace('origin/', '')
+          echo "构建分支: ${params.BRANCH_NAME}"
+          checkout([
+            $class: 'GitSCM',
+            // 更稳的分支 spec（兼容带 / 的分支名）
+            branches: [[name: "*/${branch}"]],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [],
+            userRemoteConfigs: scm.userRemoteConfigs
+          ])
+        }
+      }
+    }
+
+    stage('Validate App') {
+      steps {
+        script {
+          def appsToBuild = selectedApps(params)
+          echo "本次选择打包 Apps: ${appsToBuild.join(', ')}"
+
+          appsToBuild.each { app ->
+            def appDir = "apps/${app}"
+            if (!fileExists("${appDir}/pubspec.yaml")) {
+              error "未找到 app：${appDir}/pubspec.yaml（请确认 APP_NAME）"
+            }
+            if (!fileExists("${appDir}/assets/channel_config.json")) {
+              error "未找到配置：${appDir}/assets/channel_config.json"
+            }
+            echo "构建 App: ${app} (${appDir})"
+          }
+        }
+      }
+    }
+
+    stage('Flutter Dependencies') {
+      steps {
+        script {
+          def appsToBuild = selectedApps(params)
+
+          // 顺序执行，避免并发占用缓存/Pod/Xcode 资源
+          appsToBuild.each { app ->
+            dir("apps/${app}") {
+              sh '''
+              flutter clean
+              flutter pub get
+              '''
+            }
+          }
+        }
+      }
+    }
+
+    stage('Build All Variants') {
+      steps {
+        script {
+          def repoRoot = pwd()
+          def appsToBuild = selectedApps(params)
+
+          def envParam = params.ENV
+          def branch = params.BRANCH_NAME.replace('origin/', '')
+          // 用于文件夹/文件名的分支标识：只取最后一段，避免 prev/prev_xxx 变成 prev_prev_xxx
+          def branchShort = branch.tokenize('/').last()
+          def branchTag = branchShort.replace('/', '_')
+
+          // 产物统一移动到 Mac 文稿目录：~/Documents/flutter_packages/<branch>
+          def exportRootDir = "${env.HOME}/Documents/flutter_packages"
+          def deviceParam = (params.DEVICE ?: 'All').toString().trim()
+          def shouldBuildIOS = (deviceParam.equalsIgnoreCase('All') || deviceParam.equalsIgnoreCase('iOS'))
+          def shouldBuildAndroid = (deviceParam.equalsIgnoreCase('All') || deviceParam.equalsIgnoreCase('android'))
+          // ALL 模式下：顺序打包每个渠道；每个渠道内部仍按 channel_config 顺序打包并上传
+          appsToBuild.each { appName ->
+            // 记录当前正在处理的渠道，供 post failure 使用
+            env.CURRENT_APP = appName
+            def appDir = "apps/${appName}"
+
+            // 用 shell+python 解析 JSON，避免 Groovy JsonSlurper 的 LazyMap 序列化问题
+            def configLines = sh(script: """
+              cd '${appDir}' && python3 -c "
+import json
+sep = chr(31)
+with open('assets/channel_config.json') as f:
+    for c in json.load(f):
+        print(sep.join([
+            c.get('installKey',''), c.get('kiwiRs',''), c.get('mineTrackKey',''),
+            c.get('domains',''), c.get('aws',''), c.get('ios',''), c.get('android',''),
+            c.get('appName',''), c.get('mineTrackChannelCode','')
+        ]))
+"
+            """, returnStdout: true).trim().split('\n').findAll { it }
+
+            // 这里不要用 awk（Groovy GString 会误解析 $），改用 sed 提取 version 字段
+            def version = sh(script: "cd '${appDir}' && grep '^version:' pubspec.yaml | sed 's/^version:[[:space:]]*//' | tr -d '\\n\\r'", returnStdout: true).trim()
+
+            def exportBaseDir = "${exportRootDir}/${branchTag}/${appName}"
+            sh "mkdir -p \"${exportBaseDir}\""
+
+            dir(appDir) {
+              configLines.each { line ->
+                def parts = line.split(/\u001f/, -1)
+                def installKey = parts.size() > 0 ? parts[0] : ''
+                def kiwiRs = parts.size() > 1 ? parts[1] : ''
+                def mineTrackKey = parts.size() > 2 ? parts[2] : ''
+                def domains = parts.size() > 3 ? parts[3] : ''
+                def aws = parts.size() > 4 ? parts[4] : ''
+                def iosBundle = (parts.size() > 5 ? parts[5] : '').trim()
+                def androidAppId = (parts.size() > 6 ? parts[6] : '').trim()
+                def appDisplayName = parts.size() > 7 ? parts[7] : ''
+
+                def ipaTarget = "${exportBaseDir}/${branchTag}_${appName}_${installKey}.ipa"
+                def apkTarget = "${exportBaseDir}/${branchTag}_${appName}_${installKey}.apk"
+
+                echo "=========================================="
+                echo "📦 构建: APP=${appName} | INSTALL_KEY=${installKey} | AppName: ${appDisplayName}"
+                echo "   iOS: ${iosBundle} | Android: ${androidAppId}"
+                echo "=========================================="
+
+                // 还原当前渠道的 ios/android（避免上一个 variant 修改影响本次）
+                sh "git -C \"${repoRoot}\" checkout -- \"${appDir}/android\" \"${appDir}/ios\" 2>/dev/null || true"
+
+                sh """
+                  \"${repoRoot}/scripts/apply_app_identifiers.sh\" "${iosBundle}" "${androidAppId}" "${installKey}" "${installKey}" "${appDisplayName}" "${repoRoot}/${appDir}"
+                """
+
+                if (shouldBuildIOS && fileExists("ios/")) {
+                  sh '''
+                    RUNNER_DIRS=$(ls ~/Library/Developer/Xcode/DerivedData | grep "^Runner-" || true)
+                    for DIR in $RUNNER_DIRS; do
+                      rm -rf ~/Library/Developer/Xcode/DerivedData/$DIR || true
+                    done
+                  '''
+                  // 同一 Job 连续打多个 app/variant 时，login.keychain 常会超时上锁；exportArchive 会整批报
+                  // No Accounts / No signing certificate。节点上配置 KEYCHAIN_PASSWORD 后由脚本解锁（见 scripts/unlock_login_keychain_for_codesign.sh）。
+                  sh """
+                    export VERBOSE=1
+                    \"${repoRoot}/scripts/unlock_login_keychain_for_codesign.sh\"
+                  """
+                  sh """
+                    flutter clean
+                    flutter pub get
+                    cd ios && pod install --repo-update && cd ..
+                    flutter build ipa --release --no-tree-shake-icons \\
+                        --export-options-plist=ios/Runner/ExportOptions.plist \\
+                        --dart-define=ENV=${envParam} \\
+                        --dart-define=INSTALL_KEY=${installKey}
+                  """
+                  def ipaPath = sh(script: "ls -t build/ios/ipa/*.ipa 2>/dev/null | head -1 || true", returnStdout: true).trim()
+                  if (!ipaPath) {
+                    error "iOS IPA 未生成 (app=${appName}, installKey=${installKey})"
+                  }
+                  sh "mv -f \"${ipaPath}\" \"${ipaTarget}\""
+                  echo "📌 iOS IPA: ${ipaTarget}"
+                } else {
+                  echo "⏭️ 跳过 iOS 打包 (DEVICE=${deviceParam})"
+                }
+
+                if (shouldBuildAndroid) {
+                  sh """
+                    flutter pub get
+                    flutter build apk --release --no-tree-shake-icons \\
+                        --dart-define=ENV=${envParam} \\
+                        --dart-define=INSTALL_KEY=${installKey}
+                  """
+                  if (fileExists("build/app/outputs/flutter-apk/app-release.apk")) {
+                    sh "mv -f build/app/outputs/flutter-apk/app-release.apk \"${apkTarget}\""
+                    echo "📌 Android APK: ${apkTarget}"
+                  } else {
+                    error "APK 未生成 (app=${appName}, installKey=${installKey})"
+                  }
+                } else {
+                  echo "⏭️ 跳过 Android 打包 (DEVICE=${deviceParam})"
+                }
+
+                // 每个 installKey 的 iOS+Android 均完成后发一条消息（只保留唯一标识：branch-app-installKey）
+                writeFile file: 'tg_variant_done.txt', text: "分支:${branch} 渠道:${appName} installkey:${installKey} 打包完成\n"
+                sh '''
+                  curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+                    --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+                    --data-urlencode "text@tg_variant_done.txt" >/dev/null
+                '''
+              }
+            }
+
+            echo "✅ 所有 Variant 构建完成"
+            // 打包完成：发一条消息，再开始上传
+            writeFile file: 'tg_msg.txt', text: "${branch} 分支 渠道:${appName} 完成打包，正在上传\n"
+            sh '''
+              curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+                --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+                --data-urlencode "text@tg_msg.txt" >/dev/null
+            '''
+
+            // 等所有包打包完成后顺序上传；5 分钟超时；上传 1 个失败则不再继续，发一条上传失败消息
+            def uploadFailed = false
+            configLines.each { line ->
+              if (uploadFailed) return
+              def parts = line.split(/\u001f/, -1)
+              def installKey = parts.size() > 0 ? parts[0] : ''
+              def kiwiRs = parts.size() > 1 ? parts[1] : ''
+              def mineTrackKey = parts.size() > 2 ? parts[2] : ''
+              def domains = parts.size() > 3 ? parts[3] : ''
+              def aws = parts.size() > 4 ? parts[4] : ''
+              def iosBundle = (parts.size() > 5 ? parts[5] : '').trim()
+              def androidAppId = (parts.size() > 6 ? parts[6] : '').trim()
+              def appDisplayName = parts.size() > 7 ? parts[7] : ''
+              def mineTrackChannelCode = parts.size() > 8 ? parts[8] : ''
+              def ipaFile = "${exportBaseDir}/${branchTag}_${appName}_${installKey}.ipa"
+              def apkFile = "${exportBaseDir}/${branchTag}_${appName}_${installKey}.apk"
+
+              // 文件附加消息（caption）
+              writeFile file: 'tg_caption.txt', text: """分支: ${branch}
+渠道: ${appName}
+版本: ${version}
+AppName: ${appDisplayName}
+kiwiRs: ${kiwiRs}
+mineTrackAppCode: ${mineTrackKey}
+mineTrackChannelCode: ${mineTrackChannelCode}
+ios包名: ${iosBundle}
+android包名: ${androidAppId}
+domains: ${domains}
+aws: ${aws}
+"""
+
+              def hasIpa = (sh(script: "test -f \"${ipaFile}\"", returnStatus: true) == 0)
+              if (shouldBuildIOS && hasIpa) {
+                def out = sh(script: """
+                  set +e
+                  curl -s -w '%{http_code}' -o upload_resp.json -X POST --max-time 300 "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \\
+                    -F "chat_id=$TELEGRAM_GROUP_ID" \\
+                    -F "document=@${ipaFile}" \\
+                    -F "caption=<tg_caption.txt"
+                  CURL_EXIT=\$?
+                  echo " EXIT:\$CURL_EXIT"
+                """, returnStdout: true).trim()
+                def code = out.contains('EXIT:') ? out.replaceAll('\\s*EXIT:.*', '').trim() : out
+                def exitCode = out.contains('EXIT:') ? out.replaceAll('.*EXIT:', '').trim() : '0'
+                def reason = ''
+                if (exitCode == '28') {
+                  reason = '请求超时(5分钟)'
+                } else if (code != '200') {
+                  reason = sh(script: """
+                    python3 -c "
+import json
+try:
+    with open('upload_resp.json') as f:
+        d = json.load(f)
+    print(d.get('description', str(d.get('error_code', 'unknown'))))
+except Exception:
+    print('未知错误')
+" 2>/dev/null || echo "未知错误"
+                  """, returnStdout: true).trim().replaceAll('\n', ' ').take(200)
+                }
+                if (code != '200' || exitCode == '28') {
+                  if (!reason) reason = "HTTP ${code}"
+                  echo "❌ IPA 上传失败 (iOS) installKey=${installKey} HTTP=${code} 原因: ${reason}"
+                  writeFile file: 'tg_fail_msg.txt', text: "❌ 上传失败 (iOS)\n分支: ${branch}\ninstallKey: ${installKey}\n原因: ${reason}\n"
+                  sh '''
+                    curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+                      --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+                      --data-urlencode "text@tg_fail_msg.txt" >/dev/null
+                  '''
+                  uploadFailed = true
+                  return
+                }
+              }
+              if (uploadFailed) return
+              def hasApk = (sh(script: "test -f \"${apkFile}\"", returnStatus: true) == 0)
+              if (shouldBuildAndroid && hasApk) {
+                def out = sh(script: """
+                  set +e
+                  curl -s -w '%{http_code}' -o upload_resp.json -X POST --max-time 300 "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \\
+                    -F "chat_id=$TELEGRAM_GROUP_ID" \\
+                    -F "document=@${apkFile}" \\
+                    -F "caption=<tg_caption.txt"
+                  CURL_EXIT=\$?
+                  echo " EXIT:\$CURL_EXIT"
+                """, returnStdout: true).trim()
+                def code = out.contains('EXIT:') ? out.replaceAll('\\s*EXIT:.*', '').trim() : out
+                def exitCode = out.contains('EXIT:') ? out.replaceAll('.*EXIT:', '').trim() : '0'
+                def reason = ''
+                if (exitCode == '28') {
+                  reason = '请求超时(5分钟)'
+                } else if (code != '200') {
+                  reason = sh(script: """
+                    python3 -c "
+import json
+try:
+    with open('upload_resp.json') as f:
+        d = json.load(f)
+    print(d.get('description', str(d.get('error_code', 'unknown'))))
+except Exception:
+    print('未知错误')
+" 2>/dev/null || echo "未知错误"
+                  """, returnStdout: true).trim().replaceAll('\n', ' ').take(200)
+                }
+                if (code != '200' || exitCode == '28') {
+                  if (!reason) reason = "HTTP ${code}"
+                  echo "❌ APK 上传失败 (Android) installKey=${installKey} HTTP=${code} 原因: ${reason}"
+                  writeFile file: 'tg_fail_msg.txt', text: "❌ 上传失败 (Android)\n分支: ${branch}\ninstallKey: ${installKey}\n原因: ${reason}\n"
+                  sh '''
+                    curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+                      --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+                      --data-urlencode "text@tg_fail_msg.txt" >/dev/null
+                  '''
+                  uploadFailed = true
+                  return
+                }
+              }
+            }
+            if (!uploadFailed) {
+              writeFile file: 'tg_msg.txt', text: "✅ 渠道:${appName} 上传完成\n分支: ${branch}\n"
+              sh '''
+                curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+                  --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+                  --data-urlencode "text@tg_msg.txt" >/dev/null
+              '''
+            }
+          }
+
+          // 选择多个渠道时：所有渠道都上传完成后，再补发一条汇总消息
+          if (appsToBuild.size() > 1) {
+            writeFile file: 'tg_all_done.txt', text: "✅ 所选渠道上传完成\n分支: ${branch}\n渠道: ${appsToBuild.join(', ')}\n"
+            sh '''
+              curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+                --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+                --data-urlencode "text@tg_all_done.txt" >/dev/null
+            '''
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      script {
+        def branch = params.BRANCH_NAME.replace('origin/', '')
+        def failedApp = (env.CURRENT_APP ?: selectedApps(params).join(', '))
+        writeFile file: 'tg_fail_msg.txt', text: "❌ 构建失败！分支: ${branch}\n渠道: ${failedApp}\n构建号: ${env.BUILD_NUMBER}\n"
+        sh '''
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TELEGRAM_GROUP_ID" \
+            --data-urlencode "text@tg_fail_msg.txt" >/dev/null
+        '''
+      }
+    }
+  }
+}

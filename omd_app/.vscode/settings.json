@@ -1,0 +1,20 @@
+{
+  "dart.flutterSdkPath": "${workspaceFolder}/.fvm/flutter_sdk",
+  "cmake.ignoreCMakeListsMissing": true,
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.import.gradle.enabled": false,
+  "java.import.exclusions": ["**/android/**", "**/.gradle/**", "**/build/**", "**/.settings/**"],
+  "search.useIgnoreFiles": true,
+  "search.exclude": {
+    "**/build": true,
+    "**/.dart_tool": true,
+    "**/.fvm": true,
+    "**/node_modules": true,
+    "**/ios/Pods": true,
+    "**/android": true,
+    "**/.gradle": true,
+    "**/build_outputs": true,
+    "**/.idea": true,
+    "**/assets": true
+  }
+}

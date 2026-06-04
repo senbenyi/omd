@@ -1,0 +1,23 @@
+name: flutter_mg91
+
+packages:
+  - apps/*
+  - packages/base
+  - packages/common
+  - packages/network
+  - packages/store
+  - packages/customer
+
+scripts:
+  analyze:
+    description: Run flutter analyze in all packages
+    run: dart run melos exec --fail-fast --concurrency=1 -- flutter analyze --no-fatal-warnings --no-fatal-infos
+
+  test:
+    description: Run tests in all packages
+    run: dart run melos exec --fail-fast --concurrency=1 -- flutter test
+
+  format:
+    description: Format Dart code in all packages
+    run: dart run melos exec --fail-fast -- dart format .
+

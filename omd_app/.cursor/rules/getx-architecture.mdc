@@ -1,0 +1,50 @@
+---
+globs: lib/pages/**/*.dart
+---
+# GetX架构规范
+
+## 文件命名规范
+- 页面文件：`*_view.dart` (视图层)
+- 逻辑文件：`*_logic.dart` (控制器层)
+- 绑定文件：`*_binding.dart` (依赖注入)
+
+## 代码组织
+每个页面模块应包含：
+1. **View层** (`*_view.dart`): 纯UI展示
+2. **Logic层** (`*_logic.dart`): 业务逻辑和状态管理
+3. **Binding层** (`*_binding.dart`): 依赖注入配置
+
+## 状态管理
+- 使用 `GetView<Controller>` 作为页面基类
+- 使用 `GetxController` 作为控制器基类
+- 响应式变量使用 `.obs` 后缀
+- 使用 `Obx()` 或 `GetBuilder()` 进行UI更新
+- 对于简单变量，使用 RxInt、RxString 等，避免手动调用 update()
+- 使用 Obx 包裹需要刷新的 Widget，而不是整个页面
+- 仅将需要响应的变量声明为 Rx，静态变量无需包装
+- 将业务逻辑放在控制器中，UI 仅负责展示
+- 如果你的变量是.obs的，那么我们就使用Obx(()=>)
+- 如果你的变量不是.obs的，那么我们就使用GetBuilder<T>
+
+## 路由管理
+- 路由定义在 [routers.dart](mdc:lib/routes/routers.dart)
+- 使用 `Get.toNamed()` 进行页面跳转
+- 支持参数传递和返回值处理
+
+## 依赖注入
+- 使用 Bindings：在路由中绑定控制器，而不是手动调用 Get.put。
+- 懒加载：优先使用 Get.lazyPut 延迟加载控制器，优化内存使用。
+- 单例与临时实例：默认使用单例模式（Get.put），若需要临时实例，设置 fenix: true
+- 服务类注入：将 API 服务、数据库等注入到控制器中。
+
+## 响应式与性能优化
+- 最小化 Obx 使用：仅包裹需要刷新的 Widget，避免性能浪费。
+- Workers：使用 ever、once、debounce 等 Workers 监听状态变化，避免重复调用。
+- 缓存数据：对于频繁访问的数据，使用 GetStorage 或本地数据库缓存。
+- 避免嵌套 Obx：嵌套可能导致性能问题，尽量扁平化。
+```
+
+description:
+globs:
+alwaysApply: false
+---

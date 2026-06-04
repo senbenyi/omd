@@ -1,0 +1,54 @@
+/// 门店模块文案 key。
+final class StoreStoreI18n {
+  const StoreStoreI18n._();
+
+  static const addStore = 'storeAddStore';
+  static const editStore = 'storeEditStore';
+  static const storeForm = 'storeForm';
+  static const storeDetail = 'storeDetail';
+  static const emptyStores = 'storeEmptyStores';
+  static const loadFailed = 'storeLoadFailed';
+  static const saveSuccess = 'storeSaveSuccess';
+  static const nameLabel = 'storeNameLabel';
+  static const addressLabel = 'storeAddressLabel';
+  static const phoneLabel = 'storePhoneLabel';
+  static const contactLabel = 'storeContactLabel';
+  static const vipLevelLabel = 'storeVipLevelLabel';
+  static const referrerLabel = 'storeReferrerLabel';
+  static const nameHint = 'storeNameHint';
+  static const addressHint = 'storeAddressHint';
+  static const phoneHint = 'storePhoneHint';
+  static const contactHint = 'storeContactHint';
+  static const vipLevelHint = 'storeVipLevelHint';
+  static const referrerHint = 'storeReferrerHint';
+  static const statusLabel = 'storeStatusLabel';
+  static const businessHours = 'storeBusinessHours';
+  static const open24Hours = 'storeOpen24Hours';
+  static const openTime = 'storeOpenTime';
+  static const closeTime = 'storeCloseTime';
+  static const closedWeekdays = 'storeClosedWeekdays';
+  static const closedWeekdaysHint = 'storeClosedWeekdaysHint';
+  static const serviceExpire = 'storeServiceExpire';
+  static const vipLevel = 'storeVipLevel';
+  static const referrerId = 'storeReferrerId';
+  static const additionalPeriod = 'storeAdditionalPeriod';
+  static const saveButton = 'storeSaveButton';
+  static const formIncomplete = 'storeFormIncomplete';
+  static const invalidBusinessHours = 'storeInvalidBusinessHours';
+  static const serviceInfo = 'storeServiceInfo';
+  static const statusOpen = 'storeStatusOpen';
+  static const statusClosed = 'storeStatusClosed';
+  static const statusRest = 'storeStatusRest';
+  static const weekdayMon = 'storeWeekdayMon';
+  static const weekdayTue = 'storeWeekdayTue';
+  static const weekdayWed = 'storeWeekdayWed';
+  static const weekdayThu = 'storeWeekdayThu';
+  static const weekdayFri = 'storeWeekdayFri';
+  static const weekdaySat = 'storeWeekdaySat';
+  static const weekdaySun = 'storeWeekdaySun';
+  static const noneSelected = 'storeNoneSelected';
+  static const timePickerConfirm = 'storeTimePickerConfirm';
+  static const timePickerCancel = 'storeTimePickerCancel';
+  static const manageMenu = 'storeManageMenu';
+  static const manageMenuHint = 'storeManageMenuHint';
+}

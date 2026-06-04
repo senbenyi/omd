@@ -1,0 +1,37 @@
+---
+alwaysApply: true
+---
+# Flutter项目架构指南
+
+这是一个基于GetX架构的Flutter项目，主要入口文件是 [main.dart](mdc:lib/main.dart)。
+
+## 项目结构
+- **lib/common/**: 通用模块
+  - [configs/](mdc:lib/common/configs/): 配置文件
+  - [models/](mdc:lib/common/models/): 数据模型
+  - [res/](mdc:lib/common/res/): 资源文件（颜色、样式、字符串等）
+  - [services/](mdc:lib/common/services/): 服务层
+  - [utils/](mdc:lib/common/utils/): 工具类
+
+- **lib/pages/**: 页面模块
+  - [bottom_nav/](mdc:lib/pages/bottom_nav/): 底部导航
+  - [home/](mdc:lib/pages/home/): 首页模块
+  - [community/](mdc:lib/pages/community/): 社区模块
+  - [video/](mdc:lib/pages/video/): 视频模块
+  - [cartoon/](mdc:lib/pages/cartoon/): 漫画模块
+  - [my/](mdc:lib/pages/my/): 个人中心
+
+- **lib/widgets/**: 通用组件
+- **lib/routes/**: 路由配置
+
+## 依赖管理
+项目使用 [pubspec.yaml](mdc:pubspec.yaml) 管理依赖，主要依赖包括：
+- GetX (状态管理)
+- flutter_screenutil (屏幕适配)
+- dio (网络请求)
+- cached_network_image (图片缓存)
+- video_player (视频播放)
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,134 @@
+# ========================================
+# 通用忽略
+# ========================================
+*.class
+*.log
+*.pyc
+*.swp
+.idea
+.metadata
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.idea
+.swiftpm/
+migrate_working_dir/
+
+# ========================================
+# IntelliJ / Android Studio 相关
+# ========================================
+*.ipr
+*.iws
+
+
+# ========================================
+# VS Code 相关
+# ========================================
+# .vscode/ 包含启动配置，通常需要保留
+# .vscode/
+
+# ========================================
+# Flutter / Dart / Pub 相关
+# ========================================
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+.packages
+
+# ========================================
+# 构建产物
+# ========================================
+build/
+**/build/
+
+# ========================================
+# 符号和混淆相关
+# ========================================
+app.*.symbols
+app.*.map.json
+
+# ========================================
+# Android 相关
+# ========================================
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/.gradle/
+**/android/local.properties
+**/android/*.iml
+
+# ========================================
+# iOS 相关
+# ========================================
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Runner.xcworkspace/xcuserdata/
+**/ios/Runner.xcodeproj/xcuserdata/
+**/ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
+
+# ========================================
+# 桌面平台自动生成文件
+# ========================================
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+
+# ========================================
+# FVM (Flutter Version Management)
+# ========================================
+.fvm/
+
+# ========================================
+# Melos Monorepo 相关 (重要!)
+# ========================================
+
+# 根目录不应该有这些文件夹（它们应该在 apps/ 下）
+# 这样切换分支时不会污染 monorepo 结构
+#/android/
+#/ios/
+#/lib/
+#/linux/
+#/macos/
+#/windows/
+#/web/
+#/test/
+
+# Melos 旧版生成的文件
+pubspec_overrides.yaml
+
+# ========================================
+# 各应用和包的忽略
+# ========================================
+
+# apps 下各应用的构建产物和缓存
+apps/**/build/
+apps/**/.dart_tool/
+apps/**/.flutter-plugins
+apps/**/.flutter-plugins-dependencies
+apps/**/pubspec_overrides.yaml
+
+# packages 下各包的构建产物和缓存
+packages/**/build/
+packages/**/.dart_tool/
+packages/**/pubspec_overrides.yaml
+
+# ========================================
+# 构建输出目录
+# ========================================
+build_outputs/
+
+# pubspec.lock 由各 app/package 提交，用于锁定依赖版本（勿忽略）

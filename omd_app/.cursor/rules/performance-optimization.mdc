@@ -1,0 +1,30 @@
+---
+globs: lib/**/*.dart
+---
+# 性能优化指南
+
+## 图片优化
+- 使用 [cached_mg_image_provider.dart](mdc:lib/widgets/cached_mg_image_provider.dart) 进行图片缓存
+- 支持图片懒加载和预加载
+- 使用WebP格式减少文件大小
+
+## 列表优化
+- 使用 `ListView.builder` 或 `GridView.builder` 进行长列表渲染
+- 实现分页加载减少内存占用
+- 使用 `PullToRefresh` 进行下拉刷新和上拉加载
+
+## 内存管理
+- 及时释放不需要的资源
+- 使用 `dispose()` 方法清理控制器
+- 避免内存泄漏
+
+## 性能监控
+- 使用 [performance_monitor.dart](mdc:lib/common/utils/performance_monitor.dart) 监控性能
+- 在Debug模式下启用性能监控
+- 记录关键操作的执行时间
+```
+
+description:
+globs:
+alwaysApply: false
+---

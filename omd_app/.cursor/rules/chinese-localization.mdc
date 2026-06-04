@@ -1,0 +1,30 @@
+---
+globs: lib/**/*.dart
+---
+# 中文本地化规范
+
+## 字符串管理
+- 所有文本字符串定义在 [app_string.dart](mdc:lib/common/res/app_string.dart)
+- 使用常量避免硬编码字符串
+- 支持多语言切换
+
+## 文本样式
+- 默认使用中文字体 [pingFangTextStyle](mdc:lib/common/res/app_style.dart)
+- 文字样式定义在 [app_style.dart](mdc:lib/common/res/app_style.dart)
+- 支持不同字重和大小
+
+## 日期时间
+- 使用 `intl` 包进行日期格式化
+- 支持中文日期显示
+- 使用 `timeago` 包显示相对时间
+
+## 数字格式化
+- 支持中文数字格式化
+- 货币显示格式
+- 文件大小格式化
+```
+
+description:
+globs:
+alwaysApply: false
+---

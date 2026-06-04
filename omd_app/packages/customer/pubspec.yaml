@@ -1,0 +1,26 @@
+name: customer
+description: Customer business module for the melos workspace.
+version: 0.0.1
+publish_to: "none"
+
+environment:
+  sdk: ^3.7.2
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  get: ^4.6.5
+  flutter_screenutil: ^5.8.4
+  common:
+    path: ../common
+  base:
+    path: ../base
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
