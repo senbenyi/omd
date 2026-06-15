@@ -20,6 +20,7 @@ public class MenuCombosController : ApiControllerBase
         var userId = CurrentUserId;
         if (userId is null)
             return Ok(ApiResponse<List<MenuComboDto>>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.ListAsync(userId.Value, storeId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<List<MenuComboDto>>.Ok(ok));
@@ -31,6 +32,7 @@ public class MenuCombosController : ApiControllerBase
         var userId = CurrentUserId;
         if (userId is null)
             return Ok(ApiResponse<MenuComboDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.GetDetailAsync(userId.Value, storeId, comboId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuComboDetailDto>.Ok(ok));
@@ -44,6 +46,7 @@ public class MenuCombosController : ApiControllerBase
         var userId = CurrentUserId;
         if (userId is null)
             return Ok(ApiResponse<MenuComboDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.SaveAsync(userId.Value, storeId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuComboDetailDto>.Ok(ok));
@@ -58,6 +61,7 @@ public class MenuCombosController : ApiControllerBase
         var userId = CurrentUserId;
         if (userId is null)
             return Ok(ApiResponse<MenuComboDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.SaveContentAsync(userId.Value, storeId, comboId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuComboDetailDto>.Ok(ok));
@@ -71,6 +75,7 @@ public class MenuCombosController : ApiControllerBase
         var userId = CurrentUserId;
         if (userId is null)
             return Ok(ApiResponse<object?>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var fail = await _service.RemoveAsync(userId.Value, storeId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<object?>.Ok(null));

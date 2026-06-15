@@ -64,9 +64,11 @@ class GoUserLoginModel {
   String? get displayName => fullName ?? account;
 
   bool get hasLoginIdentity =>
-      userId > 0 ||
-      (userIdStr?.isNotEmpty ?? false) ||
-      (token?.isNotEmpty ?? false);
+      (token?.trim().isNotEmpty ?? false) &&
+      (userId > 0 ||
+          (userIdStr?.isNotEmpty ?? false) ||
+          (account?.isNotEmpty ?? false) ||
+          (fullName?.isNotEmpty ?? false));
 
   Map<String, dynamic> toJson() {
     if (userIdStr != null || (token?.isNotEmpty ?? false)) {
@@ -90,7 +92,8 @@ class GoUserLoginModel {
   }
 
   static bool _isOpenApiFormat(Map<String, dynamic> json) {
-    return json.containsKey('token') &&
+    final token = json['token']?.toString().trim() ?? '';
+    return token.isNotEmpty &&
         (json.containsKey('userId') || json.containsKey('username'));
   }
 }

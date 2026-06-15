@@ -16,6 +16,8 @@ dependencies:
     path: ../common
   base:
     path: ../base
+  network:
+    path: ../network
 
 dev_dependencies:
   flutter_test:

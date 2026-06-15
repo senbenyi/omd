@@ -26,6 +26,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<PagedListDto<MenuItemListDto>>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.ListAsync(userId.Value, storeId, categoryId, status, soldOut, keyword, page, pageSize);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<PagedListDto<MenuItemListDto>>.Ok(ok));
@@ -36,6 +37,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<MenuItemDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.GetDetailAsync(userId.Value, storeId, itemId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuItemDetailDto>.Ok(ok));
@@ -46,6 +48,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<MenuItemDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.SaveAsync(userId.Value, storeId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuItemDetailDto>.Ok(ok));
@@ -56,6 +59,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<object?>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var result = await _service.RemoveAsync(userId.Value, storeId, request);
         return Ok(result);
     }
@@ -66,6 +70,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<MenuItemDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.UpdateStatusAsync(userId.Value, storeId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuItemDetailDto>.Ok(ok));
@@ -77,6 +82,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<MenuItemDetailDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.UpdateSoldOutAsync(userId.Value, storeId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuItemDetailDto>.Ok(ok));
@@ -87,6 +93,7 @@ public class MenuItemsController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<object?>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var result = await _service.BatchSortAsync(userId.Value, storeId, request);
         return Ok(result);
     }

@@ -11,6 +11,7 @@ public static class DbSeed
         await db.Database.EnsureCreatedAsync();
         await ApplyStoreSchemaPatchesAsync(db);
         await ApplyMenuSchemaPatchesAsync(db);
+        await ApplyCustomerOrderSchemaPatchesAsync(db);
 
         if (!await db.Users.AnyAsync())
         {
@@ -75,6 +76,41 @@ public static class DbSeed
         }
 
         await TasteLibrarySeed.SeedAsync(db);
+        await SeedDemoComboAsync(db);
+    }
+
+    private static async Task SeedDemoComboAsync(AppDbContext db)
+    {
+        if (await db.MenuCombos.AnyAsync()) return;
+
+        var store = await db.Stores.OrderBy(s => s.Id).FirstOrDefaultAsync();
+        var item = store is null
+            ? null
+            : await db.MenuItems
+                .Where(i => i.StoreId == store.Id && i.Status == "on_sale")
+                .OrderBy(i => i.Id)
+                .FirstOrDefaultAsync();
+        if (store is null || item is null) return;
+
+        var combo = new MenuCombo
+        {
+            StoreId = store.Id,
+            Name = "牛肉面超值套餐",
+            Price = 4500,
+            Sort = 10,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.MenuCombos.Add(combo);
+        await db.SaveChangesAsync();
+
+        db.MenuComboItems.Add(new MenuComboItem
+        {
+            ComboId = combo.Id,
+            MenuItemId = item.Id,
+            Qty = 1,
+            Sort = 0
+        });
+        await db.SaveChangesAsync();
     }
 
     private static async Task ApplyStoreSchemaPatchesAsync(AppDbContext db)
@@ -190,6 +226,38 @@ public static class DbSeed
             CREATE INDEX IF NOT EXISTS idx_menu_combo_items_combo ON menu_combo_items(combo_id);
             CREATE INDEX IF NOT EXISTS idx_menu_combo_items_item ON menu_combo_items(menu_item_id);
             CREATE INDEX IF NOT EXISTS idx_menu_items_category_sort ON menu_items(category_id, sort);
+            """);
+    }
+
+    private static async Task ApplyCustomerOrderSchemaPatchesAsync(AppDbContext db)
+    {
+        await db.Database.ExecuteSqlRawAsync("""
+            CREATE TABLE IF NOT EXISTS customer_orders (
+                id              BIGSERIAL PRIMARY KEY,
+                store_id        BIGINT NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+                table_number    INT NOT NULL,
+                total_amount    INT NOT NULL DEFAULT 0,
+                status          VARCHAR(20) NOT NULL DEFAULT 'pending',
+                remark          TEXT,
+                created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_customer_orders_store_created
+                ON customer_orders(store_id, created_at DESC);
+
+            CREATE TABLE IF NOT EXISTS customer_order_lines (
+                id              BIGSERIAL PRIMARY KEY,
+                order_id        BIGINT NOT NULL REFERENCES customer_orders(id) ON DELETE CASCADE,
+                line_type       VARCHAR(20) NOT NULL,
+                ref_id          BIGINT NOT NULL,
+                name            VARCHAR(200) NOT NULL,
+                unit_price      INT NOT NULL,
+                qty             INT NOT NULL,
+                subtotal        INT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_customer_order_lines_order
+                ON customer_order_lines(order_id);
             """);
     }
 }

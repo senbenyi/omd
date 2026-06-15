@@ -63,6 +63,8 @@ builder.Services.AddScoped<MenuCategoryService>();
 builder.Services.AddScoped<MenuComboService>();
 builder.Services.AddScoped<MenuItemService>();
 builder.Services.AddScoped<MenuTagLibraryService>();
+builder.Services.AddScoped<CustomerMenuService>();
+builder.Services.AddScoped<CustomerOrderService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(o =>

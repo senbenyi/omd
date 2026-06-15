@@ -10,12 +10,18 @@ class StoreAppRoot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = GoUserController.to;
-    return Obx(() {
-      if (user.isLogin.value) {
+    return GetX<GoUserController>(
+      builder: (user) {
+        if (!user.sessionChecked.value) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (!user.hasValidToken) {
+          return const StoreLoginPage();
+        }
         return const StoreBottomNavPage();
-      }
-      return const StoreLoginPage();
-    });
+      },
+    );
   }
 }

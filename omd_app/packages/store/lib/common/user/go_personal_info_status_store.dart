@@ -8,7 +8,7 @@ class GoPersonalInfoStatusStore {
 
   static String get token => GoUserController.to.token.value;
 
-  static bool get isLogin => GoUserController.to.isLogin.value;
+  static bool get isLogin => GoUserController.to.hasValidToken;
 
   static String get _jobSeekerCompletedKey {
     return '${_jobSeekerCompletedPrefix}_$userId';

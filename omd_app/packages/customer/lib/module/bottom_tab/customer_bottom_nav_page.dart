@@ -5,11 +5,11 @@ import 'package:customer/module/a_color/customer_colors.dart';
 import 'package:customer/module/bottom_tab/customer_bottom_nav_logic.dart';
 import 'package:customer/module/bottom_tab/customer_bottom_tab_type.dart';
 import 'package:customer/module/bottom_tab/customer_tab_bar_view.dart';
-import 'package:customer/module/home/customer_tab_home_page.dart';
+import 'package:customer/module/combo/customer_tab_combo_page.dart';
 import 'package:customer/module/menu/customer_tab_menu_page.dart';
-import 'package:customer/module/mine/customer_tab_mine_page.dart';
+import 'package:customer/module/order/customer_tab_order_page.dart';
 
-/// Customer 主框架：白色主题 + 3 Tab 底部导航（首页 / 菜单 / 我的）。
+/// Customer 主框架：3 Tab（菜单 / 套餐 / 订单），无需登录。
 class CustomerBottomNavPage extends StatefulWidget {
   const CustomerBottomNavPage({super.key});
 
@@ -66,12 +66,12 @@ class _CustomerBottomNavPageState extends State<CustomerBottomNavPage> {
   List<Widget> _buildTabPages() {
     return _logic.configList.map((config) {
       switch (config.type) {
-        case CustomerBottomTabType.home:
-          return const CustomerTabHomePage();
         case CustomerBottomTabType.menu:
           return const CustomerTabMenuPage();
-        case CustomerBottomTabType.mine:
-          return const CustomerTabMinePage();
+        case CustomerBottomTabType.combo:
+          return const CustomerTabComboPage();
+        case CustomerBottomTabType.order:
+          return const CustomerTabOrderPage();
       }
     }).toList();
   }

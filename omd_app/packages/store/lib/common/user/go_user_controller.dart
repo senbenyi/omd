@@ -18,22 +18,32 @@ class GoUserController extends GetxController {
   final loginInfo = Rx<GoUserLoginModel?>(null);
   final token = ''.obs;
   final isLogin = false.obs;
+  final sessionChecked = false.obs;
 
   late final String _loginInfoKey;
+
+  bool get hasValidToken => _normalizeToken(token.value).isNotEmpty;
 
   @override
   void onInit() {
     super.onInit();
     _loginInfoKey = _buildLoginInfoKey();
-    getLocalLoginInfo();
+  }
+
+  /// 启动时恢复本地登录态，需在 [runApp] 之前 await。
+  Future<void> restoreLocalSession() async {
+    sessionChecked.value = false;
+    _resetSessionState();
+    await getLocalLoginInfo();
   }
 
   Future<void> saveLoginInfo(GoUserLoginModel model) async {
-    loginInfo.value = model;
-    token.value = model.token ?? '';
-    isLogin.value = model.hasLoginIdentity;
-    GoHttpConfig.instance.updateToken(token.value);
+    if (!_canRestoreSession(model)) {
+      await clearLoginInfo(showToast: false);
+      return;
+    }
 
+    _applySession(model);
     await SharedStorageUtil.setString(
       _loginInfoKey,
       jsonEncode(model.toJson()),
@@ -43,7 +53,8 @@ class GoUserController extends GetxController {
 
   Future<Object?> saveLoginResponse(dynamic data) async {
     if (data is StoreAuthData) {
-      saveLoginInfo(GoUserLoginModel.fromAuthData(data));
+      await saveLoginInfo(GoUserLoginModel.fromAuthData(data));
+      return true;
     }
     if (data is! Map) {
       return false;
@@ -51,8 +62,8 @@ class GoUserController extends GetxController {
 
     final map = Map<String, dynamic>.from(data);
     final model = GoUserLoginModel.fromJson(map);
-    if (!model.hasLoginIdentity) {
-      NLog.d('Go 登录成功但缺少用户标识');
+    if (!_canRestoreSession(model)) {
+      NLog.d('Go 登录成功但缺少有效 token 或用户标识');
       return false;
     }
     await saveLoginInfo(model);
@@ -90,7 +101,6 @@ class GoUserController extends GetxController {
     try {
       final jsonText = SharedStorageUtil.getString(_loginInfoKey);
       if (jsonText.isEmpty) {
-        isLogin.value = false;
         return;
       }
 
@@ -101,19 +111,19 @@ class GoUserController extends GetxController {
       }
 
       final model = GoUserLoginModel.fromJson(Map<String, dynamic>.from(json));
-      if (!model.hasLoginIdentity) {
+      if (!_canRestoreSession(model)) {
+        NLog.d('Go 本地登录信息无效，已清理缓存 userId=${model.displayUserId}');
         await clearLoginInfo(showToast: false);
         return;
       }
 
-      loginInfo.value = model;
-      token.value = model.token ?? '';
-      isLogin.value = true;
-      GoHttpConfig.instance.updateToken(token.value);
+      _applySession(model);
       NLog.d('Go 本地登录信息恢复成功 userId=${model.displayUserId}');
     } catch (e) {
       NLog.d('Go 本地登录信息读取失败 $e');
       await clearLoginInfo(showToast: false);
+    } finally {
+      sessionChecked.value = true;
     }
   }
 
@@ -122,10 +132,7 @@ class GoUserController extends GetxController {
   }
 
   Future<void> clearLoginInfo({bool showToast = false}) async {
-    loginInfo.value = null;
-    token.value = '';
-    isLogin.value = false;
-    GoHttpConfig.instance.updateToken('');
+    _resetSessionState();
     await SharedStorageUtil.remove(_loginInfoKey);
     if (showToast) {
       showAppToast('已退出登录');
@@ -153,6 +160,33 @@ class GoUserController extends GetxController {
     } finally {
       NineProgressHud.dismiss();
     }
+  }
+
+  void _applySession(GoUserLoginModel model) {
+    final normalizedToken = _normalizeToken(model.token);
+    loginInfo.value = model;
+    token.value = normalizedToken;
+    isLogin.value = normalizedToken.isNotEmpty;
+    GoHttpConfig.instance.updateToken(normalizedToken);
+  }
+
+  void _resetSessionState() {
+    loginInfo.value = null;
+    token.value = '';
+    isLogin.value = false;
+    GoHttpConfig.instance.updateToken('');
+  }
+
+  bool _canRestoreSession(GoUserLoginModel model) {
+    return _normalizeToken(model.token).isNotEmpty && model.hasLoginIdentity;
+  }
+
+  static String _normalizeToken(String? value) {
+    final normalized = value?.trim() ?? '';
+    if (normalized.isEmpty || normalized == 'null') {
+      return '';
+    }
+    return normalized;
   }
 
   String _buildLoginInfoKey() {

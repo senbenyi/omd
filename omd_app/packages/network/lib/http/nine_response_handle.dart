@@ -56,7 +56,7 @@ class NineResponseHandle {
     NineBaseResponse response, {
     NineHttpConfig? config,
   }) {
-    if (response.code == 401) {
+    if (response.code == 401 || response.code == 1002) {
       config?.onTokenError(response);
     }
   }

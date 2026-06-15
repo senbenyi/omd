@@ -6,16 +6,19 @@ class GoHttpConfig implements NineHttpConfig {
   GoHttpConfig._();
   static final GoHttpConfig instance = GoHttpConfig._();
   String _token = '';
+  void Function()? onSessionExpired;
 
   void updateToken(String token) {
-    _token = token;
+    _token = token.trim();
   }
 
   @override
   String get token => _token;
 
   @override
-  void onTokenError(NineBaseResponse response) {}
+  void onTokenError(NineBaseResponse response) {
+    onSessionExpired?.call();
+  }
 
   @override
   void showMsgTost(NineBaseResponse response) {}
@@ -24,7 +27,7 @@ class GoHttpConfig implements NineHttpConfig {
   String get deviceId => UuidService.currentDeviceID;
 
   @override
-  bool get isLogin => false;
+  bool get isLogin => _token.isNotEmpty;
 
   bool get isTenantLogin => token.isNotEmpty;
 }

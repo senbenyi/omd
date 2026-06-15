@@ -1,6 +1,7 @@
 import 'package:base/utils/app_channel.dart';
 import 'package:base/utils/mg_bottom_tab_type.dart';
 import 'package:base/utils/tv_bottom_tab_type.dart';
+import 'package:customer/common/customer_dev_config.dart';
 
 /// Customer 业务渠道配置。
 class CustomerAppChannel extends BaseAppChannel {
@@ -22,7 +23,7 @@ class CustomerAppChannel extends BaseAppChannel {
   NineThemeMode get themeMode => NineThemeMode.light;
 
   @override
-  String get devDomain => '';
+  String get devDomain => CustomerDevConfig.devDomain;
 
   @override
   String get videoDomain => '';

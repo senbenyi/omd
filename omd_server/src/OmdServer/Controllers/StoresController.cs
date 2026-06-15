@@ -28,6 +28,7 @@ public class StoresController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<StoreDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        storeId = DemoStoreId(storeId);
         var store = await _stores.GetStoreAsync(userId.Value, storeId);
         if (store is null)
             return Ok(ApiResponse<StoreDto>.Fail(ApiCodes.NoStorePermission, "无门店权限"));

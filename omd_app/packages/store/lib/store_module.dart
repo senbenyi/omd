@@ -13,9 +13,16 @@ class StoreModule implements BaseModule {
 
   Future<void> init() async {
     await GoHttp.instance.registerHttpServer(GoHttpConfig.instance);
-    if (!Get.isRegistered<GoUserController>()) {
-      Get.put(GoUserController(), permanent: true);
+    if (Get.isRegistered<GoUserController>()) {
+      await Get.delete<GoUserController>(force: true);
     }
+    Get.put(GoUserController(), permanent: true);
+    GoHttpConfig.instance.onSessionExpired = () {
+      if (Get.isRegistered<GoUserController>()) {
+        GoUserController.to.clearLoginInfo(showToast: true);
+      }
+    };
+    await GoUserController.to.restoreLocalSession();
   }
 
   @override

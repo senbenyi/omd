@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<MenuTagOption> MenuTagOptions => Set<MenuTagOption>();
     public DbSet<MenuCombo> MenuCombos => Set<MenuCombo>();
     public DbSet<MenuComboItem> MenuComboItems => Set<MenuComboItem>();
+    public DbSet<CustomerOrder> CustomerOrders => Set<CustomerOrder>();
+    public DbSet<CustomerOrderLine> CustomerOrderLines => Set<CustomerOrderLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -184,6 +186,37 @@ public class AppDbContext : DbContext
             e.HasOne(x => x.Combo).WithMany(c => c.Items).HasForeignKey(x => x.ComboId);
             e.HasOne(x => x.MenuItem).WithMany().HasForeignKey(x => x.MenuItemId);
             e.HasIndex(x => new { x.ComboId, x.MenuItemId }).IsUnique();
+        });
+
+        modelBuilder.Entity<CustomerOrder>(e =>
+        {
+            e.ToTable("customer_orders");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.StoreId).HasColumnName("store_id");
+            e.Property(x => x.TableNumber).HasColumnName("table_number");
+            e.Property(x => x.TotalAmount).HasColumnName("total_amount");
+            e.Property(x => x.Status).HasColumnName("status").HasMaxLength(20);
+            e.Property(x => x.Remark).HasColumnName("remark");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId);
+            e.HasIndex(x => new { x.StoreId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<CustomerOrderLine>(e =>
+        {
+            e.ToTable("customer_order_lines");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.OrderId).HasColumnName("order_id");
+            e.Property(x => x.LineType).HasColumnName("line_type").HasMaxLength(20);
+            e.Property(x => x.RefId).HasColumnName("ref_id");
+            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(200);
+            e.Property(x => x.UnitPrice).HasColumnName("unit_price");
+            e.Property(x => x.Qty).HasColumnName("qty");
+            e.Property(x => x.Subtotal).HasColumnName("subtotal");
+            e.HasOne(x => x.Order).WithMany(o => o.Lines).HasForeignKey(x => x.OrderId);
+            e.HasIndex(x => x.OrderId);
         });
     }
 }
