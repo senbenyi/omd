@@ -21,6 +21,21 @@ public class StoreService
         return stores.Select(MapStore).ToList();
     }
 
+    public async Task<List<CustomerStoreDto>> ListCustomerStoresAsync()
+    {
+        var stores = await _db.Stores
+            .OrderByDescending(s => s.Id)
+            .ToListAsync();
+        return stores.Select(MapCustomerStore).ToList();
+    }
+
+    private static CustomerStoreDto MapCustomerStore(Store s) => new(
+        s.Id,
+        s.Name,
+        s.Status,
+        s.Address,
+        s.Phone);
+
     public async Task<StoreDto?> GetStoreAsync(long userId, long storeId)
     {
         var store = await _db.Stores
@@ -61,6 +76,52 @@ public class StoreService
             return (null, ApiResponse<StoreDto>.Fail(ApiCodes.InvalidParams, "保存失败，请检查输入内容后重试"));
         }
         return (MapStore(store), null);
+    }
+
+    public async Task<(bool Ok, ApiResponse<object?>? Fail)> DeleteStoreAsync(long userId, long storeId)
+    {
+        var store = await _db.Stores
+            .FirstOrDefaultAsync(s => s.Id == storeId && s.OwnerUserId == userId);
+        if (store is null)
+            return (false, ApiResponse<object?>.Fail(ApiCodes.NoStorePermission, "无门店权限"));
+
+        var orderIds = await _db.CustomerOrders
+            .Where(o => o.StoreId == storeId)
+            .Select(o => o.Id)
+            .ToListAsync();
+        if (orderIds.Count > 0)
+        {
+            var orderLines = await _db.CustomerOrderLines
+                .Where(l => orderIds.Contains(l.OrderId))
+                .ToListAsync();
+            _db.CustomerOrderLines.RemoveRange(orderLines);
+            var orders = await _db.CustomerOrders.Where(o => o.StoreId == storeId).ToListAsync();
+            _db.CustomerOrders.RemoveRange(orders);
+        }
+
+        var comboIds = await _db.MenuCombos
+            .Where(c => c.StoreId == storeId)
+            .Select(c => c.Id)
+            .ToListAsync();
+        if (comboIds.Count > 0)
+        {
+            var comboItems = await _db.MenuComboItems
+                .Where(i => comboIds.Contains(i.ComboId))
+                .ToListAsync();
+            _db.MenuComboItems.RemoveRange(comboItems);
+            var combos = await _db.MenuCombos.Where(c => c.StoreId == storeId).ToListAsync();
+            _db.MenuCombos.RemoveRange(combos);
+        }
+
+        var items = await _db.MenuItems.Where(i => i.StoreId == storeId).ToListAsync();
+        _db.MenuItems.RemoveRange(items);
+
+        var categories = await _db.MenuCategories.Where(c => c.StoreId == storeId).ToListAsync();
+        _db.MenuCategories.RemoveRange(categories);
+
+        _db.Stores.Remove(store);
+        await _db.SaveChangesAsync();
+        return (true, null);
     }
 
     private async Task<(StoreDto? Result, ApiResponse<StoreDto>? Fail)> CreateStoreAsync(
@@ -147,6 +208,7 @@ public class StoreService
 
     public static StoreDto MapStore(Store s) => new(
         s.Id,
+        s.OwnerUserId,
         s.Name,
         s.Status,
         s.Address,

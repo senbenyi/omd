@@ -16,6 +16,8 @@ public record RegisterRequest(string Phone, string Password, string? Username);
 
 public record LoginResponse(string Token, string UserId, string Username, string Phone);
 
+public record UserProfileDto(string UserId, string Username, string Phone, string CreatedAt);
+
 public record ServiceInfoDto(
     string ServiceExpireAt,
     int VipLevel,
@@ -29,6 +31,7 @@ public record BusinessHoursDto(
 
 public record StoreDto(
     long Id,
+    long UserId,
     string Name,
     string Status,
     string Address,

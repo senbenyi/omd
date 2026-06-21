@@ -27,9 +27,11 @@ class MenuPageHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.storeSelector,
+    this.subtitle,
   });
 
   final String title;
+  final String? subtitle;
   final Widget storeSelector;
 
   @override
@@ -42,9 +44,12 @@ class MenuPageHeader extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.w700,
@@ -52,10 +57,26 @@ class MenuPageHeader extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
+                if (subtitle != null && subtitle!.isNotEmpty) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: StoreColors.secondaryText,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          storeSelector,
+          SizedBox(width: 12.w),
+          Flexible(
+            fit: FlexFit.loose,
+            child: storeSelector,
+          ),
         ],
       ),
     );
@@ -78,7 +99,6 @@ class MenuStoreSelectorChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final child = Container(
-      constraints: BoxConstraints(maxWidth: 148.w),
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -102,6 +122,7 @@ class MenuStoreSelectorChip extends StatelessWidget {
           ),
           SizedBox(width: 6.w),
           Flexible(
+            fit: FlexFit.loose,
             child: Text(
               label,
               maxLines: 1,

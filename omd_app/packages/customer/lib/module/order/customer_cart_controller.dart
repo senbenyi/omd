@@ -27,10 +27,31 @@ class CustomerCartController extends GetxController {
   static CustomerCartController get to => Get.find<CustomerCartController>();
 
   final lines = <CustomerCartLine>[].obs;
+  final revision = 0.obs;
+  int? storeId;
 
   int get totalCents => lines.fold(0, (sum, line) => sum + line.subtotal);
 
   int get totalQty => lines.fold(0, (sum, line) => sum + line.qty);
+
+  void _notifyChanged() {
+    revision.value++;
+    lines.refresh();
+  }
+
+  void ensureStore(int newStoreId) {
+    if (storeId == newStoreId) return;
+    if (storeId != null && lines.isNotEmpty) {
+      _clearLinesOnly();
+    }
+    storeId = newStoreId;
+  }
+
+  void _clearLinesOnly() {
+    if (lines.isEmpty) return;
+    lines.clear();
+    _notifyChanged();
+  }
 
   void addMenuItem({required int id, required String name, required int price}) {
     _addLine(type: 'item', id: id, name: name, unitPrice: price);
@@ -50,7 +71,7 @@ class CustomerCartController extends GetxController {
     final index = lines.indexWhere((line) => line.key == key);
     if (index >= 0) {
       lines[index].qty += 1;
-      lines.refresh();
+      _notifyChanged();
       return;
     }
     lines.add(
@@ -61,13 +82,14 @@ class CustomerCartController extends GetxController {
         unitPrice: unitPrice,
       ),
     );
+    _notifyChanged();
   }
 
   void increaseQty(String key) {
     final index = lines.indexWhere((line) => line.key == key);
     if (index < 0) return;
     lines[index].qty += 1;
-    lines.refresh();
+    _notifyChanged();
   }
 
   void decreaseQty(String key) {
@@ -75,17 +97,16 @@ class CustomerCartController extends GetxController {
     if (index < 0) return;
     if (lines[index].qty <= 1) {
       lines.removeAt(index);
+      _notifyChanged();
       return;
     }
     lines[index].qty -= 1;
-    lines.refresh();
+    _notifyChanged();
   }
 
-  void removeLine(String key) {
-    lines.removeWhere((line) => line.key == key);
+  void clearLines() {
+    _clearLinesOnly();
   }
-
-  void clear() => lines.clear();
 
   int qtyOf({required String type, required int id}) {
     final key = '$type-$id';

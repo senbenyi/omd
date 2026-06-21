@@ -51,4 +51,11 @@ final class StoreStoreI18n {
   static const timePickerCancel = 'storeTimePickerCancel';
   static const manageMenu = 'storeManageMenu';
   static const manageMenuHint = 'storeManageMenuHint';
+  static const manageStores = 'storeManageStores';
+  static const manageStoresHint = 'storeManageStoresHint';
+  static const currentStore = 'storeCurrentStore';
+  static const currentStoreEmpty = 'storeCurrentStoreEmpty';
+  static const deleteStore = 'storeDeleteStore';
+  static const deleteStoreConfirm = 'storeDeleteStoreConfirm';
+  static const deleteSuccess = 'storeDeleteSuccess';
 }

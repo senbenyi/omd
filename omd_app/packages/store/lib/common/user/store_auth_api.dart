@@ -12,6 +12,9 @@ class StoreAuthApi {
   /// POST /auth/register — 注册（无需鉴权）
   static const String registerApi = '/auth/register';
 
+  /// GET /auth/me — 当前登录用户信息（需鉴权）
+  static const String profileApi = '/auth/me';
+
   static Future<StoreApiResponse<StoreAuthData>> login(
     StoreAuthLoginRequest request,
   ) async {
@@ -22,6 +25,16 @@ class StoreAuthApi {
     StoreAuthRegisterRequest request,
   ) async {
     return _postAuth(registerApi, request.toJson());
+  }
+
+  static Future<StoreApiResponse<StoreAuthProfileData>> getProfile() async {
+    final response = await GoHttp.instance.get(
+      url: profileApi,
+      needRequetEncry: false,
+      responseIsEncryped: false,
+      needToast: false,
+    );
+    return _parseProfileResponse(response);
   }
 
   static Future<StoreApiResponse<StoreAuthData>> _postAuth(
@@ -69,6 +82,41 @@ class StoreAuthApi {
 
     return StoreApiResponse.success(
       StoreAuthData.fromJson(Map<String, dynamic>.from(raw)),
+      message: response.message.isNotEmpty ? response.message : 'ok',
+    );
+  }
+
+  static StoreApiResponse<StoreAuthProfileData> _parseProfileResponse(
+    NineBaseResponse response,
+  ) {
+    if (response.error != null || response.statusCode >= 400) {
+      return StoreApiResponse.failure(
+        code: response.code.toString(),
+        message:
+            response.message.isNotEmpty
+                ? response.message
+                : (response.statusMessage.isNotEmpty
+                    ? response.statusMessage
+                    : '请求失败'),
+      );
+    }
+
+    final businessCode = response.code.toString();
+    if (businessCode != '0') {
+      return StoreApiResponse.failure(
+        code: businessCode,
+        message:
+            response.message.isNotEmpty ? response.message : '请求失败',
+      );
+    }
+
+    final raw = response.data;
+    if (raw is! Map) {
+      return StoreApiResponse.failure(code: '1001', message: '响应数据格式错误');
+    }
+
+    return StoreApiResponse.success(
+      StoreAuthProfileData.fromJson(Map<String, dynamic>.from(raw)),
       message: response.message.isNotEmpty ? response.message : 'ok',
     );
   }

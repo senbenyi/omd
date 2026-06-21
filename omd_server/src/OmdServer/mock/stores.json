@@ -1,0 +1,645 @@
+{
+  "ownerUserId": 1,
+  "stores": [
+    {
+      "userId": 2,
+      "name": "老王牛肉面（人民路店）",
+      "status": "open",
+      "address": "东京都台东区上野 1-2-3",
+      "phone": "03-1234-5678",
+      "contactName": "王小明",
+      "isOpen24Hours": false,
+      "businessOpenTime": 32400000,
+      "businessCloseTime": 79200000,
+      "closedWeekdays": [
+        2
+      ],
+      "vipLevel": 2,
+      "referrerId": "80001",
+      "additionalPeriod": 30,
+      "menu": {
+        "categories": [
+          {
+            "name": "招牌热菜",
+            "sort": 10
+          },
+          {
+            "name": "经典小吃",
+            "sort": 20
+          },
+          {
+            "name": "饮品",
+            "sort": 30
+          }
+        ],
+        "items": [
+          {
+            "categoryName": "招牌热菜",
+            "name": "秘制红烧牛肉面",
+            "price": 3800,
+            "sort": 100,
+            "description": "每日现熬牛骨汤",
+            "tags": [
+              "招牌"
+            ]
+          },
+          {
+            "categoryName": "招牌热菜",
+            "name": "番茄牛腩面",
+            "price": 3600,
+            "sort": 90,
+            "description": "酸甜开胃"
+          },
+          {
+            "categoryName": "招牌热菜",
+            "name": "清炖牛肉汤面",
+            "price": 3400,
+            "sort": 80
+          },
+          {
+            "categoryName": "经典小吃",
+            "name": "卤蛋",
+            "price": 300,
+            "sort": 50
+          },
+          {
+            "categoryName": "经典小吃",
+            "name": "酸辣土豆丝",
+            "price": 800,
+            "sort": 40,
+            "spicyLevel": 1
+          },
+          {
+            "categoryName": "经典小吃",
+            "name": "香酥鸡排",
+            "price": 1200,
+            "sort": 30
+          },
+          {
+            "categoryName": "饮品",
+            "name": "冰豆浆",
+            "price": 500,
+            "sort": 20
+          },
+          {
+            "categoryName": "饮品",
+            "name": "酸梅汤",
+            "price": 600,
+            "sort": 10
+          }
+        ],
+        "combos": [
+          {
+            "name": "牛肉面超值套餐",
+            "price": 4500,
+            "sort": 10,
+            "lines": [
+              {
+                "itemName": "秘制红烧牛肉面"
+              },
+              {
+                "itemName": "卤蛋"
+              },
+              {
+                "itemName": "冰豆浆"
+              }
+            ]
+          },
+          {
+            "name": "双人分享套餐",
+            "price": 7800,
+            "sort": 20,
+            "lines": [
+              {
+                "itemName": "番茄牛腩面",
+                "qty": 2
+              },
+              {
+                "itemName": "酸辣土豆丝"
+              },
+              {
+                "itemName": "酸梅汤",
+                "qty": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "userId": 1,
+      "name": "川味小馆（涩谷店）",
+      "status": "open",
+      "address": "东京都涩谷区道玄坂 2-8-1",
+      "phone": "03-5555-0101",
+      "contactName": "李师傅",
+      "isOpen24Hours": false,
+      "businessOpenTime": 32400000,
+      "businessCloseTime": 79200000,
+      "closedWeekdays": [
+        1
+      ],
+      "vipLevel": 2,
+      "referrerId": "80002",
+      "additionalPeriod": 15,
+      "menu": {
+        "categories": [
+          {
+            "name": "招牌川菜",
+            "sort": 10
+          },
+          {
+            "name": "川味小炒",
+            "sort": 20
+          },
+          {
+            "name": "主食",
+            "sort": 30
+          },
+          {
+            "name": "酒水",
+            "sort": 40
+          }
+        ],
+        "items": [
+          {
+            "categoryName": "招牌川菜",
+            "name": "水煮鱼",
+            "price": 4800,
+            "sort": 100,
+            "spicyLevel": 3,
+            "tags": [
+              "招牌",
+              "热销"
+            ]
+          },
+          {
+            "categoryName": "招牌川菜",
+            "name": "麻婆豆腐",
+            "price": 2200,
+            "sort": 90,
+            "spicyLevel": 2
+          },
+          {
+            "categoryName": "招牌川菜",
+            "name": "宫保鸡丁",
+            "price": 2600,
+            "sort": 80,
+            "spicyLevel": 2
+          },
+          {
+            "categoryName": "川味小炒",
+            "name": "回锅肉",
+            "price": 2800,
+            "sort": 70,
+            "spicyLevel": 2
+          },
+          {
+            "categoryName": "川味小炒",
+            "name": "鱼香茄子",
+            "price": 2400,
+            "sort": 60,
+            "spicyLevel": 1
+          },
+          {
+            "categoryName": "主食",
+            "name": "米饭",
+            "price": 300,
+            "sort": 50
+          },
+          {
+            "categoryName": "酒水",
+            "name": "雪花啤酒",
+            "price": 800,
+            "sort": 20
+          },
+          {
+            "categoryName": "酒水",
+            "name": "唯怡豆奶",
+            "price": 600,
+            "sort": 10
+          }
+        ],
+        "combos": [
+          {
+            "name": "经典双人川菜套餐",
+            "price": 8800,
+            "sort": 10,
+            "lines": [
+              {
+                "itemName": "水煮鱼"
+              },
+              {
+                "itemName": "麻婆豆腐"
+              },
+              {
+                "itemName": "米饭",
+                "qty": 2
+              },
+              {
+                "itemName": "唯怡豆奶",
+                "qty": 2
+              }
+            ]
+          },
+          {
+            "name": "商务一人食",
+            "price": 4200,
+            "sort": 20,
+            "lines": [
+              {
+                "itemName": "宫保鸡丁"
+              },
+              {
+                "itemName": "米饭"
+              },
+              {
+                "itemName": "雪花啤酒"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "userId": 1,
+      "name": "樱寿司（新宿店）",
+      "status": "open",
+      "address": "东京都新宿区西新宿 6-12-4",
+      "phone": "03-5555-0202",
+      "contactName": "佐藤健",
+      "isOpen24Hours": false,
+      "businessOpenTime": 39600000,
+      "businessCloseTime": 79200000,
+      "closedWeekdays": [],
+      "vipLevel": 3,
+      "referrerId": "80003",
+      "additionalPeriod": 0,
+      "menu": {
+        "categories": [
+          {
+            "name": "手握寿司",
+            "sort": 10
+          },
+          {
+            "name": "刺身",
+            "sort": 20
+          },
+          {
+            "name": "汤品",
+            "sort": 30
+          }
+        ],
+        "items": [
+          {
+            "categoryName": "手握寿司",
+            "name": "三文鱼握",
+            "price": 680,
+            "sort": 100,
+            "unit": "贯",
+            "tags": [
+              "人气"
+            ]
+          },
+          {
+            "categoryName": "手握寿司",
+            "name": "金枪鱼握",
+            "price": 880,
+            "sort": 90,
+            "unit": "贯"
+          },
+          {
+            "categoryName": "手握寿司",
+            "name": "甜虾握",
+            "price": 780,
+            "sort": 80,
+            "unit": "贯"
+          },
+          {
+            "categoryName": "刺身",
+            "name": "综合刺身（小）",
+            "price": 3200,
+            "sort": 70,
+            "tags": [
+              "招牌"
+            ]
+          },
+          {
+            "categoryName": "刺身",
+            "name": "三文鱼刺身",
+            "price": 2800,
+            "sort": 60
+          },
+          {
+            "categoryName": "汤品",
+            "name": "味噌汤",
+            "price": 400,
+            "sort": 50
+          },
+          {
+            "categoryName": "汤品",
+            "name": "茶碗蒸",
+            "price": 600,
+            "sort": 40
+          }
+        ],
+        "combos": [
+          {
+            "name": "午餐特惠握寿司",
+            "price": 2800,
+            "sort": 10,
+            "lines": [
+              {
+                "itemName": "三文鱼握",
+                "qty": 2
+              },
+              {
+                "itemName": "金枪鱼握"
+              },
+              {
+                "itemName": "甜虾握"
+              },
+              {
+                "itemName": "味噌汤"
+              }
+            ]
+          },
+          {
+            "name": "刺身拼盘套餐",
+            "price": 5200,
+            "sort": 20,
+            "lines": [
+              {
+                "itemName": "综合刺身（小）"
+              },
+              {
+                "itemName": "茶碗蒸"
+              },
+              {
+                "itemName": "味噌汤"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "userId": 2,
+      "name": "粤式茶餐厅（池袋店）",
+      "status": "open",
+      "address": "东京都丰岛区东池袋 1-18-1",
+      "phone": "03-5555-0303",
+      "contactName": "陈老板",
+      "isOpen24Hours": false,
+      "businessOpenTime": 28800000,
+      "businessCloseTime": 75600000,
+      "closedWeekdays": [
+        3
+      ],
+      "vipLevel": 2,
+      "referrerId": null,
+      "additionalPeriod": 20,
+      "menu": {
+        "categories": [
+          {
+            "name": "点心",
+            "sort": 10
+          },
+          {
+            "name": "粥粉面",
+            "sort": 20
+          },
+          {
+            "name": "热菜",
+            "sort": 30
+          }
+        ],
+        "items": [
+          {
+            "categoryName": "点心",
+            "name": "虾饺",
+            "price": 680,
+            "sort": 100,
+            "unit": "只",
+            "minQty": 3,
+            "tags": [
+              "招牌"
+            ]
+          },
+          {
+            "categoryName": "点心",
+            "name": "烧卖",
+            "price": 580,
+            "sort": 90,
+            "unit": "只",
+            "minQty": 3
+          },
+          {
+            "categoryName": "点心",
+            "name": "叉烧包",
+            "price": 480,
+            "sort": 80,
+            "unit": "只",
+            "minQty": 2
+          },
+          {
+            "categoryName": "粥粉面",
+            "name": "艇仔粥",
+            "price": 2200,
+            "sort": 70
+          },
+          {
+            "categoryName": "粥粉面",
+            "name": "干炒牛河",
+            "price": 2600,
+            "sort": 60,
+            "tags": [
+              "热销"
+            ]
+          },
+          {
+            "categoryName": "热菜",
+            "name": "白灼菜心",
+            "price": 1800,
+            "sort": 50
+          },
+          {
+            "categoryName": "热菜",
+            "name": "蜜汁叉烧",
+            "price": 3200,
+            "sort": 40
+          }
+        ],
+        "combos": [
+          {
+            "name": "经典早茶二人餐",
+            "price": 6800,
+            "sort": 10,
+            "lines": [
+              {
+                "itemName": "虾饺",
+                "qty": 2
+              },
+              {
+                "itemName": "烧卖",
+                "qty": 2
+              },
+              {
+                "itemName": "叉烧包",
+                "qty": 2
+              },
+              {
+                "itemName": "艇仔粥"
+              }
+            ]
+          },
+          {
+            "name": "广式一人工作餐",
+            "price": 3800,
+            "sort": 20,
+            "lines": [
+              {
+                "itemName": "干炒牛河"
+              },
+              {
+                "itemName": "白灼菜心"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "userId": 2,
+      "name": "韩式烤肉（表参道店）",
+      "status": "rest",
+      "address": "东京都港区南青山 5-1-25",
+      "phone": "03-5555-0404",
+      "contactName": "金社长",
+      "isOpen24Hours": false,
+      "businessOpenTime": 32400000,
+      "businessCloseTime": 79200000,
+      "closedWeekdays": [
+        2,
+        3
+      ],
+      "vipLevel": 1,
+      "referrerId": "80004",
+      "additionalPeriod": 0,
+      "menu": {
+        "categories": [
+          {
+            "name": "烤肉",
+            "sort": 10
+          },
+          {
+            "name": "配菜",
+            "sort": 20
+          },
+          {
+            "name": "主食",
+            "sort": 30
+          },
+          {
+            "name": "饮料",
+            "sort": 40
+          }
+        ],
+        "items": [
+          {
+            "categoryName": "烤肉",
+            "name": "五花肉",
+            "price": 2800,
+            "sort": 100,
+            "tags": [
+              "招牌"
+            ]
+          },
+          {
+            "categoryName": "烤肉",
+            "name": "牛舌",
+            "price": 3600,
+            "sort": 90
+          },
+          {
+            "categoryName": "烤肉",
+            "name": "调味牛排",
+            "price": 4200,
+            "sort": 80
+          },
+          {
+            "categoryName": "配菜",
+            "name": "泡菜",
+            "price": 600,
+            "sort": 70
+          },
+          {
+            "categoryName": "配菜",
+            "name": "生菜拼盘",
+            "price": 800,
+            "sort": 60
+          },
+          {
+            "categoryName": "主食",
+            "name": "石锅拌饭",
+            "price": 2400,
+            "sort": 50
+          },
+          {
+            "categoryName": "主食",
+            "name": "大酱汤",
+            "price": 1800,
+            "sort": 40
+          },
+          {
+            "categoryName": "饮料",
+            "name": "米露",
+            "price": 700,
+            "sort": 30
+          }
+        ],
+        "combos": [
+          {
+            "name": "双人烤肉畅享",
+            "price": 9800,
+            "sort": 10,
+            "lines": [
+              {
+                "itemName": "五花肉"
+              },
+              {
+                "itemName": "牛舌"
+              },
+              {
+                "itemName": "生菜拼盘"
+              },
+              {
+                "itemName": "泡菜"
+              },
+              {
+                "itemName": "米露",
+                "qty": 2
+              }
+            ]
+          },
+          {
+            "name": "单人石锅套餐",
+            "price": 4500,
+            "sort": 20,
+            "lines": [
+              {
+                "itemName": "石锅拌饭"
+              },
+              {
+                "itemName": "大酱汤"
+              },
+              {
+                "itemName": "米露"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

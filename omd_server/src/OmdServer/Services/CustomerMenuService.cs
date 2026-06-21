@@ -85,4 +85,24 @@ public class CustomerMenuService
 
         return (new MenuComboDetailDto(combo.Id, combo.Name, combo.Price, items), null);
     }
+
+    public async Task<(List<MenuCategoryDto>? Ok, ApiResponse<object?>? Fail)> ListCategoriesAsync(long storeId)
+    {
+        if (!await _db.Stores.AnyAsync(s => s.Id == storeId))
+            return (null, ApiResponse<object?>.Fail(ApiCodes.InvalidParams, "门店不存在"));
+
+        var categories = await _db.MenuCategories
+            .Where(c => c.StoreId == storeId)
+            .Where(c => c.Items.Any(i => i.Status == "on_sale" && !i.SoldOut))
+            .OrderBy(c => c.Sort)
+            .ThenBy(c => c.Id)
+            .Select(c => new MenuCategoryDto(
+                c.Id,
+                c.Name,
+                c.Sort,
+                c.Items.Count(i => i.Status == "on_sale" && !i.SoldOut)))
+            .ToListAsync();
+
+        return (categories, null);
+    }
 }

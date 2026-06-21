@@ -66,6 +66,7 @@ info:
     |------|------|------|
     | POST | `/auth/login` | 密码登录（返回 token、用户信息） |
     | POST | `/auth/register` | 注册（返回 token、用户信息） |
+    | GET | `/auth/me` | 当前登录用户信息（需鉴权） |
 
     ### 4.3 门店
     | 方法 | 路径 | 说明 |
@@ -294,6 +295,39 @@ paths:
                   username: 新老板
                   phone: "139****9000"
 
+  /auth/me:
+    get:
+      tags: [认证]
+      summary: 当前用户信息
+      description: |
+        | 项 | 值 |
+        |----|-----|
+        | 请求类型 | GET |
+        | 是否鉴权 | **是**（需 Authorization: Bearer token） |
+
+        **返回 data 字段**
+
+        | 字段 | 类型 | 说明 |
+        |------|------|------|
+        | userId | string | 用户 Id |
+        | username | string | 用户名 / 昵称 |
+        | phone | string | 脱敏手机号，如 138****8000 |
+        | createdAt | string | 注册时间，如 2026-06-21 10:30:00 |
+      operationId: authMe
+      responses:
+        '200':
+          description: code 为 "0" 时返回当前用户信息
+          content:
+            application/json:
+              example:
+                code: "0"
+                message: ok
+                data:
+                  userId: "1"
+                  username: 王老板
+                  phone: "138****8000"
+                  createdAt: "2026-06-21 10:30:00"
+
   /stores:
     get:
       tags: [门店]
@@ -310,6 +344,7 @@ paths:
         | 字段 | 类型 | 说明 |
         |------|------|------|
         | id | integer | 门店 Id |
+        | userId | integer | 所属老板用户 Id |
         | name | string | 门店名称 |
         | status | string | open=营业 closed=打烊 rest=休息 |
         | address | string | 门店地址 |
@@ -345,6 +380,7 @@ paths:
                 message: ok
                 data:
                   - id: 20001
+                    userId: 2
                     name: 老王牛肉面（人民路店）
                     status: open
                     address: 东京都台东区上野 1-2-3

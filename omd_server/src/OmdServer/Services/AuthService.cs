@@ -67,6 +67,20 @@ public class AuthService
         return (BuildLoginResponse(user), null);
     }
 
+    public async Task<(ApiResponse<UserProfileDto>? Ok, ApiResponse<UserProfileDto>? Fail)> GetProfileAsync(long userId)
+    {
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null)
+            return (null, ApiResponse<UserProfileDto>.Fail(ApiCodes.InvalidParams, "用户不存在"));
+
+        var profile = new UserProfileDto(
+            user.Id.ToString(),
+            user.Username,
+            PhoneMaskHelper.Mask(user.Phone),
+            DateTimeHelper.FormatDateTime(user.CreatedAt));
+        return (ApiResponse<UserProfileDto>.Ok(profile), null);
+    }
+
     private ApiResponse<LoginResponse> BuildLoginResponse(Data.Entities.User user)
     {
         var token = _jwt.GenerateToken(user);

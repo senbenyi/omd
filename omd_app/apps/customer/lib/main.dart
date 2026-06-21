@@ -6,8 +6,10 @@ import 'package:base/nine_globalkey.dart';
 import 'package:base/utils/app_channel.dart';
 import 'package:base/utils/channel_config.dart';
 import 'package:base/utils/nine_env.dart';
+import 'package:common/theme/no_splash_theme.dart';
 import 'package:common/utils/SharedStorageUtil.dart';
 import 'package:customer/customer.dart';
+import 'package:customer/module/menu/customer_menu_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -63,23 +65,25 @@ class CustomerApp extends StatelessWidget {
               translations: CustomerTranslations(),
               locale: const Locale('zh', 'CN'),
               fallbackLocale: const Locale('zh', 'CN'),
-              theme: ThemeData(
-                useMaterial3: true,
-                brightness: Brightness.light,
-                scaffoldBackgroundColor: CustomerColors.scaffoldBackground,
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: CustomerColors.tabSelected,
+              theme: applyNoSplashTheme(
+                ThemeData(
+                  useMaterial3: true,
                   brightness: Brightness.light,
-                ),
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Colors.white,
-                  foregroundColor: CustomerColors.primaryText,
-                  elevation: 0,
-                  centerTitle: true,
+                  scaffoldBackgroundColor: CustomerColors.scaffoldBackground,
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: CustomerColors.tabSelected,
+                    brightness: Brightness.light,
+                  ),
+                  appBarTheme: const AppBarTheme(
+                    backgroundColor: Colors.white,
+                    foregroundColor: CustomerColors.primaryText,
+                    elevation: 0,
+                    centerTitle: true,
+                  ),
                 ),
               ),
               builder: EasyLoading.init(),
-              home: const CustomerBottomNavPage(),
+              home: const CustomerMenuPage(),
             ),
       ),
     );

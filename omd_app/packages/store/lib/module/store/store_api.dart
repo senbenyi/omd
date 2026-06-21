@@ -46,6 +46,22 @@ class StoreApi {
     return _parseObject(response, StoreModel.fromJson);
   }
 
+  static Future<StoreApiResponse<void>> deleteStore(int storeId) async {
+    final response = await GoHttp.instance.delete(
+      url: detailApi(storeId),
+      needRequetEncry: false,
+      responseIsEncryped: false,
+      needToast: false,
+    );
+    if (!_isBusinessSuccess(response)) {
+      return StoreApiResponse.failure(
+        code: response.code.toString(),
+        message: _failureMessage(response),
+      );
+    }
+    return StoreApiResponse.success(null, message: 'ok');
+  }
+
   static bool _isBusinessSuccess(NineBaseResponse response) {
     if (response.error != null) return false;
     if (response.statusCode >= 400) return false;

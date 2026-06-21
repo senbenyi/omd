@@ -30,11 +30,15 @@ class GoUserController extends GetxController {
     _loginInfoKey = _buildLoginInfoKey();
   }
 
-  /// 启动时恢复本地登录态，需在 [runApp] 之前 await。
+  /// 启动时恢复本地登录态，并在有 token 时拉取服务端用户信息。
   Future<void> restoreLocalSession() async {
     sessionChecked.value = false;
     _resetSessionState();
-    await getLocalLoginInfo();
+    await _loadLocalLoginInfo();
+    if (hasValidToken) {
+      await _syncRemoteProfileOnStartup();
+    }
+    sessionChecked.value = true;
   }
 
   Future<void> saveLoginInfo(GoUserLoginModel model) async {
@@ -98,6 +102,11 @@ class GoUserController extends GetxController {
   }
 
   Future<void> getLocalLoginInfo() async {
+    await _loadLocalLoginInfo();
+    sessionChecked.value = true;
+  }
+
+  Future<void> _loadLocalLoginInfo() async {
     try {
       final jsonText = SharedStorageUtil.getString(_loginInfoKey);
       if (jsonText.isEmpty) {
@@ -122,13 +131,54 @@ class GoUserController extends GetxController {
     } catch (e) {
       NLog.d('Go 本地登录信息读取失败 $e');
       await clearLoginInfo(showToast: false);
+    }
+  }
+
+  Future<void> _syncRemoteProfileOnStartup() async {
+    final expiredHandler = GoHttpConfig.instance.onSessionExpired;
+    GoHttpConfig.instance.onSessionExpired = () {
+      clearLoginInfo(showToast: false);
+    };
+    try {
+      final ok = await refreshProfile();
+      NLog.d('Go 启动拉取用户信息${ok ? '成功' : '失败，保留本地缓存'}');
+    } catch (e, stack) {
+      NLog.d('Go 启动拉取用户信息异常: $e\n$stack');
     } finally {
-      sessionChecked.value = true;
+      GoHttpConfig.instance.onSessionExpired = expiredHandler;
     }
   }
 
   Future<void> logOut() {
     return clearLoginInfo(showToast: true);
+  }
+
+  /// 从服务端拉取最新用户信息并合并到本地登录态（保留 token）。
+  Future<bool> refreshProfile() async {
+    if (!hasValidToken) return false;
+
+    final response = await StoreAuthApi.getProfile();
+    if (!response.isSuccess || response.data == null) {
+      return false;
+    }
+
+    final profile = response.data!;
+    final current = loginInfo.value;
+    if (current == null) return false;
+
+    final updated = GoUserLoginModel(
+      userId: int.tryParse(profile.userId) ?? current.userId,
+      userIdStr: profile.userId.isNotEmpty ? profile.userId : current.userIdStr,
+      account: profile.username.isNotEmpty ? profile.username : current.account,
+      token: current.token,
+      tokenExpires: current.tokenExpires,
+      phone: profile.phone.isNotEmpty ? profile.phone : current.phone,
+      countryCode: current.countryCode,
+      email: current.email,
+      fullName: profile.username.isNotEmpty ? profile.username : current.fullName,
+    );
+    await saveLoginInfo(updated);
+    return true;
   }
 
   Future<void> clearLoginInfo({bool showToast = false}) async {

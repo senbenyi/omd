@@ -3,6 +3,7 @@ final class StoreMenuI18n {
   const StoreMenuI18n._();
 
   static const selectStore = 'menuSelectStore';
+  static const switchStore = 'menuSwitchStore';
   static const noStore = 'menuNoStore';
   static const noCategory = 'menuNoCategory';
   static const noCategoryHint = 'menuNoCategoryHint';

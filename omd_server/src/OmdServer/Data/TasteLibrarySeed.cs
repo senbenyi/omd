@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using OmdServer.Common;
 using OmdServer.Data.Entities;
@@ -7,16 +5,10 @@ using OmdServer.Data.Entities;
 namespace OmdServer.Data;
 
 /// <summary>
-/// 从 resource/taste.json 注入用户级口味偏好（Tag 维度）库。
+/// 从 mock/taste.json 同步用户级口味偏好（Tag 维度）库。
 /// </summary>
 public static class TasteLibrarySeed
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     public static async Task SeedAsync(AppDbContext db)
     {
         var entries = await LoadEntriesAsync();
@@ -24,9 +16,7 @@ public static class TasteLibrarySeed
 
         var userIds = await db.Users.AsNoTracking().Select(u => u.Id).ToListAsync();
         foreach (var userId in userIds)
-        {
             await SeedForUserAsync(db, userId, entries);
-        }
     }
 
     public static async Task SeedForUserAsync(AppDbContext db, long userId)
@@ -36,23 +26,16 @@ public static class TasteLibrarySeed
         await SeedForUserAsync(db, userId, entries);
     }
 
-    private static async Task<List<TasteSeedEntry>> LoadEntriesAsync()
+    private static async Task<List<MockTasteEntry>> LoadEntriesAsync()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "resource", "taste.json");
-        if (!File.Exists(path))
-        {
-            return [];
-        }
-
-        await using var stream = File.OpenRead(path);
-        var entries = await JsonSerializer.DeserializeAsync<List<TasteSeedEntry>>(stream, JsonOptions);
+        var entries = await MockDataLoader.LoadAsync<List<MockTasteEntry>>("taste.json");
         return entries ?? [];
     }
 
     private static async Task SeedForUserAsync(
         AppDbContext db,
         long userId,
-        IReadOnlyList<TasteSeedEntry> entries)
+        IReadOnlyList<MockTasteEntry> entries)
     {
         var groupSort = 0;
         foreach (var entry in entries)
@@ -88,30 +71,26 @@ public static class TasteLibrarySeed
                 var value = raw?.Trim() ?? "";
                 if (string.IsNullOrWhiteSpace(value)) continue;
 
-                var exists = await db.MenuTagOptions
-                    .AnyAsync(o => o.GroupId == group.Id && o.Value == value);
-                if (exists) continue;
-
-                db.MenuTagOptions.Add(new MenuTagOption
+                var option = await db.MenuTagOptions
+                    .FirstOrDefaultAsync(o => o.GroupId == group.Id && o.Value == value);
+                if (option is null)
                 {
-                    GroupId = group.Id,
-                    Value = value,
-                    Sort = ++optionSort * 10,
-                    CreatedAt = DateTimeHelper.UtcNow
-                });
+                    db.MenuTagOptions.Add(new MenuTagOption
+                    {
+                        GroupId = group.Id,
+                        Value = value,
+                        Sort = ++optionSort * 10,
+                        CreatedAt = DateTimeHelper.UtcNow
+                    });
+                    continue;
+                }
+
+                var desiredSort = ++optionSort * 10;
+                if (option.Sort != desiredSort)
+                    option.Sort = desiredSort;
             }
         }
 
         await db.SaveChangesAsync();
-    }
-
-    private sealed class TasteSeedEntry
-    {
-        public string Name { get; set; } = string.Empty;
-
-        public int Id { get; set; }
-
-        [JsonPropertyName("tastes")]
-        public List<string> Tastes { get; set; } = [];
     }
 }

@@ -1,116 +1,25 @@
 using Microsoft.EntityFrameworkCore;
-using OmdServer.Common;
-using OmdServer.Data.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace OmdServer.Data;
 
+/// <summary>
+/// 数据库初始化：建表/补丁 + 启动时从 mock/*.json 同步演示数据。
+/// </summary>
 public static class DbSeed
 {
-    public static async Task SeedAsync(AppDbContext db)
+    public static async Task SeedAsync(AppDbContext db, ILogger? logger = null)
     {
+        logger?.LogInformation("开始数据库初始化与 Mock 数据同步…");
+
         await db.Database.EnsureCreatedAsync();
         await ApplyStoreSchemaPatchesAsync(db);
         await ApplyMenuSchemaPatchesAsync(db);
         await ApplyCustomerOrderSchemaPatchesAsync(db);
 
-        if (!await db.Users.AnyAsync())
-        {
-        var user = new User
-        {
-            Phone = "13800138000",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("abc123456"),
-            Username = "王老板",
-            CreatedAt = DateTime.UtcNow
-        };
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
+        await MockRestaurantSeed.SeedAsync(db, logger);
 
-        var store = new Store
-        {
-            OwnerUserId = user.Id,
-            Name = "老王牛肉面（人民路店）",
-            Status = "open",
-            Address = "东京都台东区上野 1-2-3",
-            Phone = "03-1234-5678",
-            ContactName = "王小明",
-            IsOpen24Hours = false,
-            BusinessOpenTime = TimeOfDayMsHelper.DefaultOpenMs,
-            BusinessCloseTime = TimeOfDayMsHelper.DefaultCloseMs,
-            ClosedWeekdays = new List<int> { 2 },
-            ServiceExpireAt = new DateTime(2027, 12, 31, 23, 59, 59, DateTimeKind.Utc),
-            VipLevel = 2,
-            ReferrerId = "80001",
-            AdditionalPeriod = 30,
-            CreatedAt = DateTime.UtcNow
-        };
-        db.Stores.Add(store);
-        await db.SaveChangesAsync();
-
-        var category = new MenuCategory
-        {
-            StoreId = store.Id,
-            Name = "招牌热菜",
-            Sort = 10,
-            CreatedAt = DateTime.UtcNow
-        };
-        db.MenuCategories.Add(category);
-        await db.SaveChangesAsync();
-
-        var now = DateTime.UtcNow;
-        db.MenuItems.Add(new MenuItem
-        {
-            StoreId = store.Id,
-            CategoryId = category.Id,
-            Name = "秘制红烧牛肉面",
-            Description = "每日现熬牛骨汤",
-            Price = 3800,
-            SpicyLevel = 1,
-            Stock = -1,
-            Status = "on_sale",
-            Sort = 100,
-            Tags = new List<string> { "招牌" },
-            CreatedAt = now,
-            UpdatedAt = now
-        });
-        await db.SaveChangesAsync();
-        }
-
-        await TasteLibrarySeed.SeedAsync(db);
-        await SeedDemoComboAsync(db);
-    }
-
-    private static async Task SeedDemoComboAsync(AppDbContext db)
-    {
-        if (await db.MenuCombos.AnyAsync()) return;
-
-        var store = await db.Stores.OrderBy(s => s.Id).FirstOrDefaultAsync();
-        var item = store is null
-            ? null
-            : await db.MenuItems
-                .Where(i => i.StoreId == store.Id && i.Status == "on_sale")
-                .OrderBy(i => i.Id)
-                .FirstOrDefaultAsync();
-        if (store is null || item is null) return;
-
-        var combo = new MenuCombo
-        {
-            StoreId = store.Id,
-            Name = "牛肉面超值套餐",
-            Price = 4500,
-            Sort = 10,
-            CreatedAt = DateTime.UtcNow
-        };
-        db.MenuCombos.Add(combo);
-        await db.SaveChangesAsync();
-
-        db.MenuComboItems.Add(new MenuComboItem
-        {
-            ComboId = combo.Id,
-            MenuItemId = item.Id,
-            Qty = 1,
-            Sort = 0
-        });
-        await db.SaveChangesAsync();
+        logger?.LogInformation("数据库初始化与 Mock 数据同步完成");
     }
 
     private static async Task ApplyStoreSchemaPatchesAsync(AppDbContext db)
@@ -239,7 +148,8 @@ public static class DbSeed
                 total_amount    INT NOT NULL DEFAULT 0,
                 status          VARCHAR(20) NOT NULL DEFAULT 'pending',
                 remark          TEXT,
-                created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at      TIMESTAMPTZ
             );
 
             CREATE INDEX IF NOT EXISTS idx_customer_orders_store_created
@@ -258,6 +168,8 @@ public static class DbSeed
 
             CREATE INDEX IF NOT EXISTS idx_customer_order_lines_order
                 ON customer_order_lines(order_id);
+
+            ALTER TABLE customer_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
             """);
     }
 }

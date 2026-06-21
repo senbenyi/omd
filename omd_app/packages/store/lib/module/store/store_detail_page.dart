@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:store/module/a_color/store_colors.dart';
+import 'package:store/module/menu/menu_i18n.dart';
 import 'package:store/module/menu/store_menu_page.dart';
+import 'package:store/module/order/store_order_history_page.dart';
+import 'package:store/module/order/store_order_i18n.dart';
+import 'package:store/module/order/store_order_list_page.dart';
 import 'package:store/module/store/store_api.dart';
 import 'package:store/module/store/store_form_page.dart';
 import 'package:store/module/store/store_i18n.dart';
@@ -67,6 +71,51 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
     if (updated == true) {
       _changed = true;
       await _loadDetail();
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(StoreStoreI18n.deleteStore.tr),
+        content: Text(StoreStoreI18n.deleteStoreConfirm.tr),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(StoreMenuI18n.cancel.tr),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              StoreMenuI18n.confirm.tr,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _deleteStore();
+    }
+  }
+
+  Future<void> _deleteStore() async {
+    NineProgressHud.showLoading();
+    try {
+      final response = await StoreApi.deleteStore(widget.storeId);
+      if (!response.isSuccess) {
+        showAppToast(
+          response.message.isNotEmpty
+              ? response.message
+              : StoreStoreI18n.loadFailed.tr,
+        );
+        return;
+      }
+      showAppToast(StoreStoreI18n.deleteSuccess.tr);
+      Get.back(result: true);
+    } finally {
+      NineProgressHud.dismiss();
     }
   }
 
@@ -168,6 +217,34 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                   ),
                   SizedBox(height: 12.h),
                   _InfoCard(
+                    title: StoreOrderI18n.manageOrders.tr,
+                    children: [
+                      _MenuEntryRow(
+                        hint: StoreOrderI18n.manageOrdersHint.tr,
+                        onTap: () {
+                          Get.to(
+                            () => StoreOrderListPage(
+                              storeId: _store!.id,
+                              storeName: _store!.name,
+                            ),
+                          );
+                        },
+                      ),
+                      _MenuEntryRow(
+                        hint: StoreOrderI18n.historyOrdersHint.tr,
+                        onTap: () {
+                          Get.to(
+                            () => StoreOrderHistoryPage(
+                              storeId: _store!.id,
+                              storeName: _store!.name,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  _InfoCard(
                     title: StoreStoreI18n.manageMenu.tr,
                     children: [
                       _MenuEntryRow(
@@ -183,6 +260,26 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 24.h),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48.h,
+                    child: OutlinedButton(
+                      onPressed: _confirmDelete,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                      ),
+                      child: Text(
+                        StoreStoreI18n.deleteStore.tr,
+                        style: TextStyle(fontSize: 15.sp),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
                 ],
               ),
       ),

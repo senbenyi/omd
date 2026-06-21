@@ -19,7 +19,6 @@ public class MenuCategoriesController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<List<MenuCategoryDto>>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
-        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.ListAsync(userId.Value, storeId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<List<MenuCategoryDto>>.Ok(ok));
@@ -30,7 +29,6 @@ public class MenuCategoriesController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<MenuCategoryDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
-        storeId = DemoStoreId(storeId);
         var (ok, fail) = await _service.SaveAsync(userId.Value, storeId, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuCategoryDto>.Ok(ok));
@@ -41,7 +39,6 @@ public class MenuCategoriesController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<object?>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
-        storeId = DemoStoreId(storeId);
         var result = await _service.RemoveAsync(userId.Value, storeId, request);
         return Ok(result);
     }

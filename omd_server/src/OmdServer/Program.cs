@@ -115,7 +115,9 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeed.SeedAsync(db);
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbSeed");
+    MockDataLoader.Configure(app.Environment.ContentRootPath);
+    await DbSeed.SeedAsync(db, logger);
 }
 
 if (app.Environment.IsDevelopment())

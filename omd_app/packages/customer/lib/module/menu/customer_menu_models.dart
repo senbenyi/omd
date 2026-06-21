@@ -1,3 +1,5 @@
+import 'package:customer/common/customer_json_utils.dart';
+
 class CustomerMenuItemModel {
   CustomerMenuItemModel({
     required this.id,
@@ -18,11 +20,11 @@ class CustomerMenuItemModel {
       }
     }
     return CustomerMenuItemModel(
-      id: _parseInt(json['id']),
-      categoryId: _parseInt(json['categoryId']),
+      id: customerParseInt(json['id']),
+      categoryId: customerParseInt(json['categoryId']),
       categoryName: json['categoryName'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      price: _parseInt(json['price']),
+      price: customerParseInt(json['price']),
       tags: tags,
     );
   }
@@ -35,6 +37,29 @@ class CustomerMenuItemModel {
   final List<String> tags;
 }
 
+class CustomerCategoryModel {
+  CustomerCategoryModel({
+    required this.id,
+    required this.name,
+    required this.sort,
+    required this.itemCount,
+  });
+
+  factory CustomerCategoryModel.fromJson(Map<String, dynamic> json) {
+    return CustomerCategoryModel(
+      id: customerParseInt(json['id']),
+      name: json['name'] as String? ?? '',
+      sort: customerParseInt(json['sort']),
+      itemCount: customerParseInt(json['itemCount']),
+    );
+  }
+
+  final int id;
+  final String name;
+  final int sort;
+  final int itemCount;
+}
+
 class CustomerComboModel {
   CustomerComboModel({
     required this.id,
@@ -45,10 +70,10 @@ class CustomerComboModel {
 
   factory CustomerComboModel.fromJson(Map<String, dynamic> json) {
     return CustomerComboModel(
-      id: _parseInt(json['id']),
+      id: customerParseInt(json['id']),
       name: json['name'] as String? ?? '',
-      price: _parseInt(json['price']),
-      itemCount: _parseInt(json['itemCount']),
+      price: customerParseInt(json['price']),
+      itemCount: customerParseInt(json['itemCount']),
     );
   }
 
@@ -71,11 +96,11 @@ class CustomerOrderLineModel {
   factory CustomerOrderLineModel.fromJson(Map<String, dynamic> json) {
     return CustomerOrderLineModel(
       type: json['type'] as String? ?? 'item',
-      id: _parseInt(json['id']),
+      id: customerParseInt(json['id']),
       name: json['name'] as String? ?? '',
-      unitPrice: _parseInt(json['unitPrice']),
-      qty: _parseInt(json['qty'], def: 1),
-      subtotal: _parseInt(json['subtotal']),
+      unitPrice: customerParseInt(json['unitPrice']),
+      qty: customerParseInt(json['qty'], def: 1),
+      subtotal: customerParseInt(json['subtotal']),
     );
   }
 
@@ -90,9 +115,12 @@ class CustomerOrderLineModel {
 class CustomerOrderResultModel {
   CustomerOrderResultModel({
     required this.orderId,
+    required this.storeId,
     required this.tableNumber,
     required this.totalAmount,
     required this.status,
+    required this.createdAt,
+    this.updatedAt,
     required this.items,
   });
 
@@ -107,24 +135,23 @@ class CustomerOrderResultModel {
       }
     }
     return CustomerOrderResultModel(
-      orderId: _parseInt(json['orderId']),
-      tableNumber: _parseInt(json['tableNumber'], def: 1),
-      totalAmount: _parseInt(json['totalAmount']),
+      orderId: customerParseInt(json['orderId']),
+      storeId: customerParseInt(json['storeId']),
+      tableNumber: customerParseInt(json['tableNumber'], def: 1),
+      totalAmount: customerParseInt(json['totalAmount']),
       status: json['status'] as String? ?? 'pending',
+      createdAt: json['createdAt'] as String? ?? '',
+      updatedAt: json['updatedAt'] as String?,
       items: items,
     );
   }
 
   final int orderId;
+  final int storeId;
   final int tableNumber;
   final int totalAmount;
   final String status;
+  final String createdAt;
+  final String? updatedAt;
   final List<CustomerOrderLineModel> items;
-}
-
-int _parseInt(dynamic value, {int def = 0}) {
-  if (value is int) return value;
-  if (value is num) return value.toInt();
-  if (value is String) return int.tryParse(value) ?? def;
-  return def;
 }

@@ -77,6 +77,7 @@ class StoreServiceInfo {
 class StoreModel {
   StoreModel({
     required this.id,
+    this.userId,
     required this.name,
     required this.status,
     required this.address,
@@ -92,6 +93,7 @@ class StoreModel {
     final hoursRaw = json['businessHours'];
     return StoreModel(
       id: _parseInt(json['id']),
+      userId: json['userId'] == null ? null : _parseInt(json['userId']),
       name: json['name'] as String? ?? '',
       status: json['status'] as String? ?? 'rest',
       address: json['address'] as String? ?? '',
@@ -118,6 +120,7 @@ class StoreModel {
   }
 
   final int id;
+  final int? userId;
   final String name;
   final String status;
   final String address;
@@ -130,6 +133,7 @@ class StoreModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      if (userId != null) 'userId': userId,
       'name': name,
       'status': status,
       'address': address,

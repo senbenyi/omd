@@ -20,11 +20,19 @@ public class CustomerController : ControllerBase
         _orders = orders;
     }
 
+    /// <summary>获取门店在售分类。</summary>
+    [HttpGet("menu/categories")]
+    public async Task<ActionResult<ApiResponse<List<MenuCategoryDto>>>> ListCategories(long storeId)
+    {
+        var (ok, fail) = await _menu.ListCategoriesAsync(storeId);
+        if (fail is not null) return Ok(fail);
+        return Ok(ApiResponse<List<MenuCategoryDto>>.Ok(ok!));
+    }
+
     /// <summary>获取门店全部在售菜品。</summary>
     [HttpGet("menu/items")]
     public async Task<ActionResult<ApiResponse<List<MenuItemListDto>>>> ListItems(long storeId)
     {
-        storeId = DemoConstants.DefaultStoreId;
         var (ok, fail) = await _menu.ListItemsAsync(storeId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<List<MenuItemListDto>>.Ok(ok!));
@@ -34,7 +42,6 @@ public class CustomerController : ControllerBase
     [HttpGet("menu/combos")]
     public async Task<ActionResult<ApiResponse<List<MenuComboDto>>>> ListCombos(long storeId)
     {
-        storeId = DemoConstants.DefaultStoreId;
         var (ok, fail) = await _menu.ListCombosAsync(storeId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<List<MenuComboDto>>.Ok(ok!));
@@ -44,20 +51,44 @@ public class CustomerController : ControllerBase
     [HttpGet("menu/combos/{comboId:long}")]
     public async Task<ActionResult<ApiResponse<MenuComboDetailDto>>> GetCombo(long storeId, long comboId)
     {
-        storeId = DemoConstants.DefaultStoreId;
         var (ok, fail) = await _menu.GetComboDetailAsync(storeId, comboId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<MenuComboDetailDto>.Ok(ok!));
     }
 
-    /// <summary>提交订单（含桌号）。</summary>
+    /// <summary>提交订单；传 orderId 时为加菜。</summary>
     [HttpPost("orders")]
-    public async Task<ActionResult<ApiResponse<CustomerOrderDto>>> CreateOrder(
+    public async Task<ActionResult<ApiResponse<CustomerOrderDto>>> SubmitOrder(
         long storeId,
         [FromBody] CreateCustomerOrderRequest request)
     {
-        storeId = DemoConstants.DefaultStoreId;
-        var (ok, fail) = await _orders.CreateOrderAsync(storeId, request);
+        var (ok, fail) = await _orders.SubmitOrderAsync(storeId, request);
+        if (fail is not null) return Ok(fail);
+        return Ok(ApiResponse<CustomerOrderDto>.Ok(ok!));
+    }
+
+    /// <summary>获取当前桌号未结算订单。</summary>
+    [HttpGet("orders/current")]
+    public async Task<ActionResult<ApiResponse<CustomerOrderDto>>> GetCurrentOrder(
+        long storeId,
+        [FromQuery] int tableNumber = 1)
+    {
+        var order = await _orders.GetCurrentOrderAsync(storeId, tableNumber);
+        return Ok(ApiResponse<CustomerOrderDto>.Ok(order));
+    }
+
+    /// <summary>获取桌号当前未结算订单（兼容）。</summary>
+    [HttpGet("orders/active")]
+    public Task<ActionResult<ApiResponse<CustomerOrderDto>>> GetActiveOrder(
+        long storeId,
+        [FromQuery] int tableNumber = 1) =>
+        GetCurrentOrder(storeId, tableNumber);
+
+    /// <summary>获取未结算订单详情。</summary>
+    [HttpGet("orders/{orderId:long}")]
+    public async Task<ActionResult<ApiResponse<CustomerOrderDto>>> GetOrder(long storeId, long orderId)
+    {
+        var (ok, fail) = await _orders.GetPendingOrderAsync(storeId, orderId);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<CustomerOrderDto>.Ok(ok!));
     }

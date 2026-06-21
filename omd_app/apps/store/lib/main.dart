@@ -6,6 +6,7 @@ import 'package:base/nine_globalkey.dart';
 import 'package:base/utils/app_channel.dart';
 import 'package:base/utils/channel_config.dart';
 import 'package:base/utils/nine_env.dart';
+import 'package:common/theme/no_splash_theme.dart';
 import 'package:common/utils/SharedStorageUtil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -63,19 +64,21 @@ class StoreApp extends StatelessWidget {
               translations: StoreTranslations(),
               locale: const Locale('zh', 'CN'),
               fallbackLocale: const Locale('zh', 'CN'),
-              theme: ThemeData(
-                useMaterial3: true,
-                brightness: Brightness.light,
-                scaffoldBackgroundColor: StoreColors.scaffoldBackground,
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: StoreColors.tabSelected,
+              theme: applyNoSplashTheme(
+                ThemeData(
+                  useMaterial3: true,
                   brightness: Brightness.light,
-                ),
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Colors.white,
-                  foregroundColor: StoreColors.primaryText,
-                  elevation: 0,
-                  centerTitle: true,
+                  scaffoldBackgroundColor: StoreColors.scaffoldBackground,
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: StoreColors.tabSelected,
+                    brightness: Brightness.light,
+                  ),
+                  appBarTheme: const AppBarTheme(
+                    backgroundColor: Colors.white,
+                    foregroundColor: StoreColors.primaryText,
+                    elevation: 0,
+                    centerTitle: true,
+                  ),
                 ),
               ),
               builder: EasyLoading.init(),

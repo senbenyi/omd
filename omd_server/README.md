@@ -21,7 +21,11 @@ omd_server/
     ├── Controllers/        # 接口层
     ├── Services/           # 业务逻辑
     ├── Data/               # EF 实体与 DbContext
-    └── Dtos/               # 请求/响应模型
+    ├── Dtos/                 # 请求/响应模型
+    └── mock/               # 演示用 JSON 数据（构建时复制到输出目录）
+        ├── users.json      # mock 用户
+        ├── stores.json     # mock 店铺/菜单/套餐
+        └── taste.json      # 口味偏好库
 ```
 
 ## 快速启动
@@ -59,11 +63,14 @@ cd src/OmdServer && dotnet run
 
 ### 3. 演示账号
 
-| 手机号 | 密码 |
-|--------|------|
-| `13800138000` | `abc123456` |
+| 手机号 | 密码 | 说明 |
+|--------|------|------|
+| `13800138000` | `abc123456` | 用户 Id 1 |
+| `13900139000` | `abc123456` | 用户 Id 2，拥有全部 mock 演示店铺 |
 
-首次启动会自动 `EnsureCreated` 并写入演示用户、门店、分类、菜品。
+首次启动会自动建表，并从 `mock/*.json` 导入全部演示数据（用户、店铺、菜单、口味库）。
+
+修改演示数据请编辑 `src/OmdServer/mock/` 下 JSON 后重启服务。
 
 ## 已实现接口
 
@@ -72,6 +79,7 @@ cd src/OmdServer && dotnet run
 | GET | `/restaurant/v1/app/config` |
 | POST | `/restaurant/v1/auth/login` |
 | POST | `/restaurant/v1/auth/register` |
+| GET | `/restaurant/v1/auth/me` |
 | GET | `/restaurant/v1/stores` |
 | GET | `/restaurant/v1/stores/{storeId}` |
 | POST | `/restaurant/v1/stores/save` |

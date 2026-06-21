@@ -1,12 +1,14 @@
 import 'package:get/get.dart';
 import 'package:store/module/login/store_login_i18n.dart';
 import 'package:store/module/menu/menu_i18n.dart';
+import 'package:store/module/order/store_order_i18n.dart';
 import 'package:store/module/store/store_i18n.dart';
 
 final class StoreCommonI18n {
   const StoreCommonI18n._();
 
   static const tabStore = 'storeTabStore';
+  static const tabOrder = 'storeTabOrder';
   static const tabMenu = 'storeTabMenu';
   static const tabMine = 'storeTabMine';
   static const storeDescription = 'storeStoreDescription';
@@ -25,6 +27,7 @@ class StoreTranslations extends Translations {
 
 const storeCommonZhCN = {
   StoreCommonI18n.tabStore: '店铺',
+  StoreCommonI18n.tabOrder: '订单',
   StoreCommonI18n.tabMenu: '菜单',
   StoreCommonI18n.tabMine: '我的',
   StoreCommonI18n.storeDescription: '店铺首页与经营概览',
@@ -33,10 +36,12 @@ const storeCommonZhCN = {
   ...storeLoginZhCN,
   ...storeStoreZhCN,
   ...storeMenuZhCN,
+  ...storeOrderZhCN,
 };
 
 const storeCommonZhTW = {
   StoreCommonI18n.tabStore: '店鋪',
+  StoreCommonI18n.tabOrder: '訂單',
   StoreCommonI18n.tabMenu: '菜單',
   StoreCommonI18n.tabMine: '我的',
   StoreCommonI18n.storeDescription: '店鋪首頁與經營概覽',
@@ -45,10 +50,12 @@ const storeCommonZhTW = {
   ...storeLoginZhTW,
   ...storeStoreZhTW,
   ...storeMenuZhTW,
+  ...storeOrderZhTW,
 };
 
 const storeCommonEnUS = {
   StoreCommonI18n.tabStore: 'Store',
+  StoreCommonI18n.tabOrder: 'Orders',
   StoreCommonI18n.tabMenu: 'Menu',
   StoreCommonI18n.tabMine: 'Mine',
   StoreCommonI18n.storeDescription: 'Store overview and operations',
@@ -57,6 +64,7 @@ const storeCommonEnUS = {
   ...storeLoginEnUS,
   ...storeStoreEnUS,
   ...storeMenuEnUS,
+  ...storeOrderEnUS,
 };
 
 const storeLoginZhCN = {
@@ -153,6 +161,13 @@ const storeStoreZhCN = {
   StoreStoreI18n.statusRest: '休息中',
   StoreStoreI18n.manageMenu: '菜单管理',
   StoreStoreI18n.manageMenuHint: '查看与管理本店菜品、分类与套餐',
+  StoreStoreI18n.manageStores: '店铺管理',
+  StoreStoreI18n.manageStoresHint: '查看与管理我的店铺',
+  StoreStoreI18n.currentStore: '当前店铺',
+  StoreStoreI18n.currentStoreEmpty: '暂未选择店铺，请在订单或菜单页切换',
+  StoreStoreI18n.deleteStore: '删除店铺',
+  StoreStoreI18n.deleteStoreConfirm: '确定删除该店铺？删除后无法恢复',
+  StoreStoreI18n.deleteSuccess: '删除成功',
   StoreStoreI18n.weekdayMon: '周一',
   StoreStoreI18n.weekdayTue: '周二',
   StoreStoreI18n.weekdayWed: '周三',
@@ -164,6 +179,7 @@ const storeStoreZhCN = {
 
 const storeMenuZhCN = {
   StoreMenuI18n.selectStore: '选择店铺',
+  StoreMenuI18n.switchStore: '切换店铺',
   StoreMenuI18n.noStore: '暂无店铺，请先在「店铺」页添加',
   StoreMenuI18n.noCategory: '暂无分类',
   StoreMenuI18n.noCategoryHint: '点击下方添加分类',
@@ -303,6 +319,13 @@ const storeStoreZhTW = {
   StoreStoreI18n.statusRest: '休息中',
   StoreStoreI18n.manageMenu: '菜單管理',
   StoreStoreI18n.manageMenuHint: '查看與管理本店菜品、分類與套餐',
+  StoreStoreI18n.manageStores: '店鋪管理',
+  StoreStoreI18n.manageStoresHint: '查看與管理我的店鋪',
+  StoreStoreI18n.currentStore: '當前店鋪',
+  StoreStoreI18n.currentStoreEmpty: '暫未選擇店鋪，請在訂單或菜單頁切換',
+  StoreStoreI18n.deleteStore: '刪除店鋪',
+  StoreStoreI18n.deleteStoreConfirm: '確定刪除該店鋪？刪除後無法恢復',
+  StoreStoreI18n.deleteSuccess: '刪除成功',
   StoreStoreI18n.weekdayMon: '週一',
   StoreStoreI18n.weekdayTue: '週二',
   StoreStoreI18n.weekdayWed: '週三',
@@ -314,6 +337,7 @@ const storeStoreZhTW = {
 
 const storeMenuZhTW = {
   StoreMenuI18n.selectStore: '選擇店鋪',
+  StoreMenuI18n.switchStore: '切換店鋪',
   StoreMenuI18n.noStore: '暫無店鋪，請先在「店鋪」頁添加',
   StoreMenuI18n.noCategory: '暫無分類',
   StoreMenuI18n.noCategoryHint: '點擊下方添加分類',
@@ -454,6 +478,14 @@ const storeStoreEnUS = {
   StoreStoreI18n.manageMenu: 'Menu management',
   StoreStoreI18n.manageMenuHint:
       'View and manage dishes, categories, and combos',
+  StoreStoreI18n.manageStores: 'Store management',
+  StoreStoreI18n.manageStoresHint: 'View and manage my stores',
+  StoreStoreI18n.currentStore: 'Current store',
+  StoreStoreI18n.currentStoreEmpty: 'No store selected. Switch store on Orders or Menu.',
+  StoreStoreI18n.deleteStore: 'Delete store',
+  StoreStoreI18n.deleteStoreConfirm:
+      'Delete this store? This action cannot be undone.',
+  StoreStoreI18n.deleteSuccess: 'Deleted successfully',
   StoreStoreI18n.weekdayMon: 'Mon',
   StoreStoreI18n.weekdayTue: 'Tue',
   StoreStoreI18n.weekdayWed: 'Wed',
@@ -465,6 +497,7 @@ const storeStoreEnUS = {
 
 const storeMenuEnUS = {
   StoreMenuI18n.selectStore: 'Select store',
+  StoreMenuI18n.switchStore: 'Switch store',
   StoreMenuI18n.noStore: 'No stores yet. Add one in the Store tab.',
   StoreMenuI18n.noCategory: 'No categories',
   StoreMenuI18n.noCategoryHint: 'Tap below to add a category',
@@ -562,4 +595,70 @@ const storeMenuEnUS = {
   StoreMenuI18n.relistItemConfirm: 'Relist "@name"?',
   StoreMenuI18n.takeOffShelfItem: 'Take off shelf',
   StoreMenuI18n.takeOffShelfConfirm: 'Take "@name" off shelf?',
+};
+
+const storeOrderZhCN = {
+  StoreOrderI18n.manageOrders: '订单管理',
+  StoreOrderI18n.manageOrdersHint: '查看进行中订单并结算',
+  StoreOrderI18n.orderListTitle: '订单列表',
+  StoreOrderI18n.orderDetailTitle: '订单详情',
+  StoreOrderI18n.emptyOrders: '暂无订单',
+  StoreOrderI18n.loadFailed: '加载失败',
+  StoreOrderI18n.settleOrder: '结算',
+  StoreOrderI18n.settleSuccess: '结算成功',
+  StoreOrderI18n.statusPending: '未结算',
+  StoreOrderI18n.statusSettled: '已结算',
+  StoreOrderI18n.tableLabel: '桌号',
+  StoreOrderI18n.totalLabel: '合计',
+  StoreOrderI18n.createdAtLabel: '下单时间',
+  StoreOrderI18n.itemCountLabel: '菜品数',
+  StoreOrderI18n.orderItemsTitle: '订单明细',
+  StoreOrderI18n.historyOrders: '历史订单',
+  StoreOrderI18n.historyOrdersHint: '查看已结算订单',
+  StoreOrderI18n.emptyPendingOrders: '暂无进行中订单',
+  StoreOrderI18n.emptyHistoryOrders: '暂无历史订单',
+};
+
+const storeOrderZhTW = {
+  StoreOrderI18n.manageOrders: '訂單管理',
+  StoreOrderI18n.manageOrdersHint: '查看進行中訂單並結算',
+  StoreOrderI18n.orderListTitle: '訂單列表',
+  StoreOrderI18n.orderDetailTitle: '訂單詳情',
+  StoreOrderI18n.emptyOrders: '暫無訂單',
+  StoreOrderI18n.loadFailed: '加載失敗',
+  StoreOrderI18n.settleOrder: '結算',
+  StoreOrderI18n.settleSuccess: '結算成功',
+  StoreOrderI18n.statusPending: '未結算',
+  StoreOrderI18n.statusSettled: '已結算',
+  StoreOrderI18n.tableLabel: '桌號',
+  StoreOrderI18n.totalLabel: '合計',
+  StoreOrderI18n.createdAtLabel: '下單時間',
+  StoreOrderI18n.itemCountLabel: '菜品數',
+  StoreOrderI18n.orderItemsTitle: '訂單明細',
+  StoreOrderI18n.historyOrders: '歷史訂單',
+  StoreOrderI18n.historyOrdersHint: '查看已結算訂單',
+  StoreOrderI18n.emptyPendingOrders: '暫無進行中訂單',
+  StoreOrderI18n.emptyHistoryOrders: '暫無歷史訂單',
+};
+
+const storeOrderEnUS = {
+  StoreOrderI18n.manageOrders: 'Orders',
+  StoreOrderI18n.manageOrdersHint: 'View active orders and settle',
+  StoreOrderI18n.orderListTitle: 'Orders',
+  StoreOrderI18n.orderDetailTitle: 'Order detail',
+  StoreOrderI18n.emptyOrders: 'No orders yet',
+  StoreOrderI18n.loadFailed: 'Failed to load',
+  StoreOrderI18n.settleOrder: 'Settle',
+  StoreOrderI18n.settleSuccess: 'Order settled',
+  StoreOrderI18n.statusPending: 'Pending',
+  StoreOrderI18n.statusSettled: 'Settled',
+  StoreOrderI18n.tableLabel: 'Table',
+  StoreOrderI18n.totalLabel: 'Total',
+  StoreOrderI18n.createdAtLabel: 'Created',
+  StoreOrderI18n.itemCountLabel: 'Items',
+  StoreOrderI18n.orderItemsTitle: 'Order items',
+  StoreOrderI18n.historyOrders: 'Order history',
+  StoreOrderI18n.historyOrdersHint: 'View settled orders',
+  StoreOrderI18n.emptyPendingOrders: 'No active orders',
+  StoreOrderI18n.emptyHistoryOrders: 'No order history',
 };

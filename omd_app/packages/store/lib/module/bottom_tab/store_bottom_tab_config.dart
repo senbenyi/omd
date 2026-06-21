@@ -19,10 +19,10 @@ class StoreTabConfig {
 abstract final class StoreBottomTabConfig {
   static const List<StoreTabConfig> tabs = [
     StoreTabConfig(
-      type: StoreBottomTabType.store,
-      labelKey: StoreCommonI18n.tabStore,
-      icon: Icons.storefront_outlined,
-      activeIcon: Icons.storefront_rounded,
+      type: StoreBottomTabType.order,
+      labelKey: StoreCommonI18n.tabOrder,
+      icon: Icons.receipt_long_outlined,
+      activeIcon: Icons.receipt_long_rounded,
     ),
     StoreTabConfig(
       type: StoreBottomTabType.menu,

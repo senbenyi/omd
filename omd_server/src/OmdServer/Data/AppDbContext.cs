@@ -199,6 +199,7 @@ public class AppDbContext : DbContext
             e.Property(x => x.Status).HasColumnName("status").HasMaxLength(20);
             e.Property(x => x.Remark).HasColumnName("remark");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
             e.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId);
             e.HasIndex(x => new { x.StoreId, x.CreatedAt });
         });

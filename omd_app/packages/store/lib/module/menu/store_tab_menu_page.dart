@@ -17,7 +17,7 @@ import 'package:store/module/menu/off_shelf/menu_off_shelf_panel.dart';
 import 'package:store/module/menu/sold_out/menu_sold_out_panel.dart';
 import 'package:store/module/menu/store_tab_menu_controller.dart';
 import 'package:store/module/bottom_tab/store_bottom_nav_logic.dart';
-import 'package:store/module/store/store_models.dart';
+import 'package:store/module/store/store_tab_store_selector.dart';
 
 class StoreTabMenuPage extends GetView<StoreTabMenuController> {
   const StoreTabMenuPage({super.key});
@@ -101,92 +101,15 @@ class _MenuPageBodyState extends State<MenuPageBody>
             if (widget.showTabHeader)
               MenuPageHeader(
                 title: StoreCommonI18n.tabMenu.tr,
-                storeSelector: Obx(() => _buildStoreSelector()),
+                storeSelector: StoreTabStoreSelector(
+                  controllerTag: widget.controllerTag,
+                ),
               ),
             Expanded(child: Obx(() => _buildBody(context))),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildStoreSelector() {
-    if (controller.isStoreLocked) {
-      final store = controller.selectedStore;
-      if (store == null) return const SizedBox.shrink();
-      return MenuStoreSelectorChip(label: store.name);
-    }
-
-    final storeList = controller.stores.toList(growable: false);
-    if (storeList.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final label =
-        controller.selectedStore?.name ??
-        storeList.first.name;
-
-    if (storeList.length == 1) {
-      return MenuStoreSelectorChip(label: label);
-    }
-
-    return MenuStoreSelectorChip(
-      label: label,
-      showDropdown: true,
-      onTap: () => _showStorePicker(storeList),
-    );
-  }
-
-  Future<void> _showStorePicker(List<StoreModel> storeList) async {
-    final selectedId = await showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-                child: Text(
-                  StoreMenuI18n.selectStore.tr,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: StoreColors.primaryText,
-                  ),
-                ),
-              ),
-              for (final store in storeList)
-                ListTile(
-                  title: Text(
-                    store.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing:
-                      store.id == controller.selectedStoreId.value
-                          ? Icon(
-                            Icons.check_rounded,
-                            color: StoreColors.tabSelected,
-                          )
-                          : null,
-                  onTap: () => Navigator.pop(sheetContext, store.id),
-                ),
-              SizedBox(height: 8.h),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (selectedId != null) {
-      await controller.selectStore(selectedId);
-    }
   }
 
   Widget _buildBody(BuildContext context) {

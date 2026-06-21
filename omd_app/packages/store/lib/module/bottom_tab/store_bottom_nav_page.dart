@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 import 'package:store/module/a_color/store_colors.dart';
 import 'package:store/module/bottom_tab/store_bottom_nav_logic.dart';
 import 'package:store/module/bottom_tab/store_tab_bar_view.dart';
+import 'package:store/module/order/store_tab_order_page.dart';
 import 'package:store/module/menu/store_tab_menu_controller.dart';
 import 'package:store/module/menu/store_tab_menu_page.dart';
 import 'package:store/module/mine/store_tab_mine_page.dart';
 import 'package:store/module/store/store_tab_store_controller.dart';
-import 'package:store/module/store/store_tab_store_page.dart';
 
-/// Store 主框架：白色主题 + 3 Tab 底部导航（店铺 / 菜单 / 我的）。
+/// Store 主框架：白色主题 + 3 Tab 底部导航（订单 / 菜单 / 我的）。
 class StoreBottomNavPage extends StatefulWidget {
   const StoreBottomNavPage({super.key});
 
@@ -33,7 +33,7 @@ class _StoreBottomNavPageState extends State<StoreBottomNavPage> {
       Get.put(StoreTabMenuController(), permanent: true);
     }
     _tabPages = const [
-      StoreTabStorePage(),
+      StoreTabOrderPage(),
       StoreTabMenuPage(),
       StoreTabMinePage(),
     ];

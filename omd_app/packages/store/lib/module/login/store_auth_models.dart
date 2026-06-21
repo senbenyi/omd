@@ -129,3 +129,36 @@ class StoreAuthData {
     };
   }
 }
+
+/// GET /auth/me 返回的当前用户信息。
+class StoreAuthProfileData {
+  StoreAuthProfileData({
+    required this.userId,
+    required this.username,
+    required this.phone,
+    required this.createdAt,
+  });
+
+  factory StoreAuthProfileData.fromJson(Map<String, dynamic> json) {
+    return StoreAuthProfileData(
+      userId: json['userId']?.toString() ?? '',
+      username: json['username'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      createdAt: json['createdAt'] as String? ?? '',
+    );
+  }
+
+  final String userId;
+  final String username;
+  final String phone;
+  final String createdAt;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'username': username,
+      'phone': phone,
+      'createdAt': createdAt,
+    };
+  }
+}

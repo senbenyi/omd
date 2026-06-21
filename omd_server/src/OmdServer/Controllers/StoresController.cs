@@ -28,7 +28,6 @@ public class StoresController : ApiControllerBase
     {
         var userId = CurrentUserId;
         if (userId is null) return Ok(ApiResponse<StoreDto>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
-        storeId = DemoStoreId(storeId);
         var store = await _stores.GetStoreAsync(userId.Value, storeId);
         if (store is null)
             return Ok(ApiResponse<StoreDto>.Fail(ApiCodes.NoStorePermission, "无门店权限"));
@@ -43,5 +42,15 @@ public class StoresController : ApiControllerBase
         var (result, fail) = await _stores.SaveStoreAsync(userId.Value, request);
         if (fail is not null) return Ok(fail);
         return Ok(ApiResponse<StoreDto>.Ok(result));
+    }
+
+    [HttpDelete("{storeId:long}")]
+    public async Task<ActionResult<ApiResponse<object?>>> Delete(long storeId)
+    {
+        var userId = CurrentUserId;
+        if (userId is null) return Ok(ApiResponse<object?>.Fail(ApiCodes.TokenInvalid, "Token 失效"));
+        var (ok, fail) = await _stores.DeleteStoreAsync(userId.Value, storeId);
+        if (fail is not null) return Ok(fail);
+        return Ok(ApiResponse<object?>.Ok(null));
     }
 }

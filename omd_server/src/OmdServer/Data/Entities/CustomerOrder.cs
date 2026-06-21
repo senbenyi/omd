@@ -9,6 +9,7 @@ public class CustomerOrder
     public string Status { get; set; } = "pending";
     public string? Remark { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public Store Store { get; set; } = null!;
     public ICollection<CustomerOrderLine> Lines { get; set; } = new List<CustomerOrderLine>();
