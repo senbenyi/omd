@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:store/common/user/go_user_login_model.dart';
 import 'package:store/common/user/store_auth_api.dart';
 import 'package:store/module/login/store_auth_models.dart';
+import 'package:store/module/store/store_session_reset.dart';
 
 class GoUserController extends GetxController {
   static GoUserController get to => Get.find<GoUserController>();
@@ -52,6 +53,7 @@ class GoUserController extends GetxController {
       _loginInfoKey,
       jsonEncode(model.toJson()),
     );
+    await StoreSessionReset.onLogin();
     NLog.d('Go 登录信息保存成功 userId=${model.displayUserId}');
   }
 
@@ -183,6 +185,7 @@ class GoUserController extends GetxController {
 
   Future<void> clearLoginInfo({bool showToast = false}) async {
     _resetSessionState();
+    StoreSessionReset.onLogout();
     await SharedStorageUtil.remove(_loginInfoKey);
     if (showToast) {
       showAppToast('已退出登录');

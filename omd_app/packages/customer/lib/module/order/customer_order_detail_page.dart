@@ -22,6 +22,7 @@ class CustomerOrderDetailPage extends StatelessWidget {
       title: CustomerCommonI18n.orderDetail.tr,
       leading: const BackButton(),
       body: Obx(() {
+        final _ = cart.revision.value;
         final activeOrder = session.currentOrder.value;
         final hasCart = cart.lines.isNotEmpty;
 

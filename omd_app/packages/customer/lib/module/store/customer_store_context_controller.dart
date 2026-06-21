@@ -60,12 +60,15 @@ class CustomerStoreContextController extends GetxController {
 
     CustomerCartController.to.ensureStore(store.id);
     CustomerOrderSessionController.to.clearIfStoreMismatch(store.id);
-    await CustomerOrderSessionController.to.refreshCurrentOrder();
 
     if (Get.isRegistered<CustomerMenuBrowseController>()) {
       NineProgressHud.showLoading();
-      await CustomerMenuBrowseController.to.reloadForStore();
-      NineProgressHud.dismiss();
+      try {
+        await CustomerOrderSessionController.to.refreshCurrentOrder();
+        await CustomerMenuBrowseController.to.reloadForStore();
+      } finally {
+        NineProgressHud.dismiss();
+      }
     }
   }
 }

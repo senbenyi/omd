@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -28,9 +30,13 @@ class _StoreBottomNavPageState extends State<StoreBottomNavPage> {
     _logic = Get.put(StoreBottomNavLogic());
     if (!Get.isRegistered<StoreTabStoreController>()) {
       Get.put(StoreTabStoreController(), permanent: true);
+    } else {
+      unawaited(Get.find<StoreTabStoreController>().loadStores());
     }
     if (!Get.isRegistered<StoreTabMenuController>()) {
       Get.put(StoreTabMenuController(), permanent: true);
+    } else {
+      Get.find<StoreTabMenuController>().resetForAuthChange();
     }
     _tabPages = const [
       StoreTabOrderPage(),

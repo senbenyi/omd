@@ -9,8 +9,13 @@ Future<bool> submitCustomerOrder({
   int tableNumber = CustomerConstants.tableNumber,
 }) async {
   final cart = CustomerCartController.to;
+  cart.ensureStore(storeId);
   if (cart.lines.isEmpty) {
     showAppToast('请先选择菜品或套餐');
+    return false;
+  }
+  if (cart.storeId != storeId) {
+    showAppToast('当前购物车与店铺不匹配，请重新选择菜品');
     return false;
   }
 

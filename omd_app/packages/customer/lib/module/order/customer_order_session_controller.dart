@@ -14,7 +14,22 @@ class CustomerOrderSessionController extends GetxController {
 
   int get committedTotalCents => currentOrder.value?.totalAmount ?? 0;
 
-  int displayTotalCents(int cartTotalCents) => committedTotalCents + cartTotalCents;
+  int committedItemCountForStore(int storeId) {
+    final order = currentOrder.value;
+    if (order == null || order.storeId != storeId) return 0;
+    return order.items.fold(0, (sum, line) => sum + line.qty);
+  }
+
+  int committedTotalCentsForStore(int storeId) {
+    final order = currentOrder.value;
+    if (order == null || order.storeId != storeId) return 0;
+    return order.totalAmount;
+  }
+
+  int displayTotalCents(int cartTotalCents) {
+    final storeId = CustomerStoreContextController.to.storeId.value;
+    return committedTotalCentsForStore(storeId) + cartTotalCents;
+  }
 
   Future<void> refreshCurrentOrder() async {
     final storeId = CustomerStoreContextController.to.storeId.value;

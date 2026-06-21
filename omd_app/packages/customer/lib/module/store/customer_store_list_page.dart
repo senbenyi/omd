@@ -3,6 +3,7 @@ import 'package:customer/module/a_color/customer_colors.dart';
 import 'package:customer/module/common/customer_menu_shell.dart';
 import 'package:customer/module/common/customer_retry_view.dart';
 import 'package:customer/module/store/customer_store_context_controller.dart';
+import 'package:customer/module/store/customer_store_status_chip.dart';
 import 'package:customer/module/store/customer_store_list_controller.dart';
 import 'package:customer/module/store/customer_store_models.dart';
 import 'package:flutter/material.dart';
@@ -114,18 +115,29 @@ class _StoreListItem extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(16.w),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      store.name,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: CustomerColors.primaryText,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            store.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                              color: CustomerColors.primaryText,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        CustomerStoreStatusChip(store: store),
+                      ],
                     ),
                     if (store.address.isNotEmpty) ...[
                       SizedBox(height: 8.h),
@@ -140,8 +152,10 @@ class _StoreListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              if (selected)
+              if (selected) ...[
+                SizedBox(width: 8.w),
                 Icon(Icons.check_circle, color: CustomerColors.tabSelected, size: 22.sp),
+              ],
             ],
           ),
         ),

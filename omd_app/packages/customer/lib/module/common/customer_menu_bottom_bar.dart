@@ -22,13 +22,30 @@ class CustomerMenuBottomBar extends StatelessWidget {
 
     return Obx(() {
       final _ = cart.revision.value;
+      final currentStoreId = storeCtx.storeId.value;
       final activeOrder = session.currentOrder.value;
       final cartTotal = cart.totalCents;
       final cartQty = cart.totalQty;
-      final displayTotal = session.displayTotalCents(cartTotal);
+      final cartMatchesStore =
+          cart.storeId == null || cart.storeId == currentStoreId;
+      final orderMatchesStore =
+          activeOrder == null || activeOrder.storeId == currentStoreId;
+      final committedQty =
+          orderMatchesStore
+              ? session.committedItemCountForStore(currentStoreId)
+              : 0;
+      final committedTotal =
+          orderMatchesStore
+              ? session.committedTotalCentsForStore(currentStoreId)
+              : 0;
+      final pendingQty = cartMatchesStore ? cartQty : 0;
+      final pendingTotal = cartMatchesStore ? cartTotal : 0;
+      final displayTotal = committedTotal + pendingTotal;
       final canSubmit =
           !menu.isSubmitting.value &&
           cartQty > 0 &&
+          cartMatchesStore &&
+          orderMatchesStore &&
           storeCtx.storeOpen.value;
 
       return Container(
@@ -39,12 +56,13 @@ class CustomerMenuBottomBar extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 8.h + MediaQuery.paddingOf(context).bottom),
         child: CustomerCheckoutBar(
           totalCents: displayTotal,
-          selectedQty: cartQty,
+          committedQty: committedQty,
+          pendingQty: pendingQty,
           isSubmitting: menu.isSubmitting.value,
           onSubmit: menu.submitOrder,
           onTotalTap: () => Get.to(() => const CustomerOrderDetailPage()),
           canSubmit: canSubmit,
-          submitLabel: activeOrder != null
+          submitLabel: activeOrder != null && orderMatchesStore
               ? CustomerCommonI18n.appendOrder.tr
               : CustomerCommonI18n.submitOrder.tr,
         ),

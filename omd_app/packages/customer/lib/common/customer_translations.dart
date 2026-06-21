@@ -10,9 +10,13 @@ final class CustomerCommonI18n {
   static const emptyOrder = 'customerEmptyOrder';
   static const emptyStores = 'customerEmptyStores';
   static const storeRestHint = 'customerStoreRestHint';
+  static const storeStatusOpen = 'customerStoreStatusOpen';
+  static const storeStatusRest = 'customerStoreStatusRest';
   static const retry = 'customerRetry';
   static const totalLabel = 'customerTotalLabel';
   static const selectedItems = 'customerSelectedItems';
+  static const committedDishes = 'customerCommittedDishes';
+  static const pendingDishes = 'customerPendingDishes';
   static const submitOrder = 'customerSubmitOrder';
   static const appendOrder = 'customerAppendOrder';
   static const orderDetail = 'customerOrderDetail';
@@ -41,9 +45,13 @@ const customerCommonZhCN = {
   CustomerCommonI18n.emptyOrder: '还没有选择菜品',
   CustomerCommonI18n.emptyStores: '暂无店铺',
   CustomerCommonI18n.storeRestHint: '店铺休息中，可浏览菜单，暂不可下单',
+  CustomerCommonI18n.storeStatusOpen: '营业中',
+  CustomerCommonI18n.storeStatusRest: '休息中',
   CustomerCommonI18n.retry: '重试',
   CustomerCommonI18n.totalLabel: '合计',
-  CustomerCommonI18n.selectedItems: '已选 @count@ 个菜品',
+  CustomerCommonI18n.selectedItems: '已选 @count 个菜品',
+  CustomerCommonI18n.committedDishes: '已下单 @count 道菜',
+  CustomerCommonI18n.pendingDishes: '等待下单 @count 道菜',
   CustomerCommonI18n.submitOrder: '提交订单',
   CustomerCommonI18n.appendOrder: '提交',
   CustomerCommonI18n.orderDetail: '详情',
@@ -63,9 +71,13 @@ const customerCommonZhTW = {
   CustomerCommonI18n.emptyOrder: '還沒有選擇菜品',
   CustomerCommonI18n.emptyStores: '暫無店鋪',
   CustomerCommonI18n.storeRestHint: '店鋪休息中，可瀏覽菜單，暫不可下單',
+  CustomerCommonI18n.storeStatusOpen: '營業中',
+  CustomerCommonI18n.storeStatusRest: '休息中',
   CustomerCommonI18n.retry: '重試',
   CustomerCommonI18n.totalLabel: '合計',
-  CustomerCommonI18n.selectedItems: '已選 @count@ 個菜品',
+  CustomerCommonI18n.selectedItems: '已選 @count 個菜品',
+  CustomerCommonI18n.committedDishes: '已下單 @count 道菜',
+  CustomerCommonI18n.pendingDishes: '等待下單 @count 道菜',
   CustomerCommonI18n.submitOrder: '提交訂單',
   CustomerCommonI18n.appendOrder: '提交',
   CustomerCommonI18n.orderDetail: '詳情',
@@ -85,9 +97,13 @@ const customerCommonEnUS = {
   CustomerCommonI18n.emptyOrder: 'Your order is empty',
   CustomerCommonI18n.emptyStores: 'No stores yet',
   CustomerCommonI18n.storeRestHint: 'This store is closed. You can browse the menu but cannot order.',
+  CustomerCommonI18n.storeStatusOpen: 'Open',
+  CustomerCommonI18n.storeStatusRest: 'Closed',
   CustomerCommonI18n.retry: 'Retry',
   CustomerCommonI18n.totalLabel: 'Total',
-  CustomerCommonI18n.selectedItems: '@count@ selected',
+  CustomerCommonI18n.selectedItems: '@count selected',
+  CustomerCommonI18n.committedDishes: 'Ordered @count dishes',
+  CustomerCommonI18n.pendingDishes: 'Pending @count dishes',
   CustomerCommonI18n.submitOrder: 'Submit order',
   CustomerCommonI18n.appendOrder: 'Submit',
   CustomerCommonI18n.orderDetail: 'Details',

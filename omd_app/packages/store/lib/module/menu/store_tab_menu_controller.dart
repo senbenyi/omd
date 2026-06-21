@@ -147,14 +147,18 @@ class StoreTabMenuController extends GetxController {
     }
   }
 
+  void resetForAuthChange() {
+    stores.clear();
+    selectedStoreId.value = null;
+    _resetAllTabs();
+  }
+
   Future<void> loadStores() async {
     isLoadingStores.value = true;
     try {
       if (Get.isRegistered<StoreTabStoreController>()) {
         final storeController = Get.find<StoreTabStoreController>();
-        if (storeController.stores.isEmpty) {
-          await storeController.loadStores();
-        }
+        await storeController.loadStores();
         stores
           ..clear()
           ..addAll(storeController.stores.toList());

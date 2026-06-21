@@ -9,9 +9,6 @@ namespace OmdServer.Data;
 /// </summary>
 public static class MockRestaurantSeed
 {
-    /// <summary>演示 mock 店铺默认绑定的老板用户 Id（与 mock/stores.json 中 ownerUserId 一致）。</summary>
-    public const long MockOwnerUserId = 2;
-
     public static async Task SeedAsync(AppDbContext db, ILogger? logger = null)
     {
         MockDataLoader.LogScanSummary(logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);

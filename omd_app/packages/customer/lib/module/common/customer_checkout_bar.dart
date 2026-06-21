@@ -9,7 +9,8 @@ class CustomerCheckoutBar extends StatelessWidget {
   const CustomerCheckoutBar({
     super.key,
     required this.totalCents,
-    required this.selectedQty,
+    required this.committedQty,
+    required this.pendingQty,
     required this.isSubmitting,
     required this.onSubmit,
     this.onTotalTap,
@@ -18,7 +19,8 @@ class CustomerCheckoutBar extends StatelessWidget {
   });
 
   final int totalCents;
-  final int selectedQty;
+  final int committedQty;
+  final int pendingQty;
   final bool isSubmitting;
   final VoidCallback onSubmit;
   final VoidCallback? onTotalTap;
@@ -28,6 +30,7 @@ class CustomerCheckoutBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           child: GestureDetector(
@@ -37,14 +40,30 @@ class CustomerCheckoutBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  CustomerCommonI18n.selectedItems.trParams({'count': '$selectedQty'}),
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: CustomerColors.secondaryText,
+                if (committedQty > 0) ...[
+                  Text(
+                    CustomerCommonI18n.committedDishes.trParams({
+                      'count': '$committedQty',
+                    }),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: CustomerColors.secondaryText,
+                    ),
                   ),
-                ),
-                SizedBox(height: 2.h),
+                  SizedBox(height: 2.h),
+                ],
+                if (pendingQty > 0) ...[
+                  Text(
+                    CustomerCommonI18n.pendingDishes.trParams({
+                      'count': '$pendingQty',
+                    }),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: CustomerColors.secondaryText,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                ],
                 Text(
                   CustomerCommonI18n.totalLabel.tr,
                   style: TextStyle(
@@ -57,12 +76,15 @@ class CustomerCheckoutBar extends StatelessWidget {
             ),
           ),
         ),
+        SizedBox(width: 12.w),
         SizedBox(
           height: 44.h,
           child: FilledButton(
             onPressed: isSubmitting || !canSubmit ? null : onSubmit,
             style: FilledButton.styleFrom(
               backgroundColor: CustomerColors.tabSelected,
+              disabledBackgroundColor: const Color(0xFFE4E7EC),
+              disabledForegroundColor: CustomerColors.secondaryText,
               padding: EdgeInsets.symmetric(horizontal: 28.w),
             ),
             child: Text(

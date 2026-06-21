@@ -42,9 +42,10 @@ class CustomerCartController extends GetxController {
   void ensureStore(int newStoreId) {
     if (storeId == newStoreId) return;
     if (storeId != null && lines.isNotEmpty) {
-      _clearLinesOnly();
+      lines.clear();
     }
     storeId = newStoreId;
+    _notifyChanged();
   }
 
   void _clearLinesOnly() {
@@ -54,10 +55,12 @@ class CustomerCartController extends GetxController {
   }
 
   void addMenuItem({required int id, required String name, required int price}) {
+    if (storeId == null) return;
     _addLine(type: 'item', id: id, name: name, unitPrice: price);
   }
 
   void addCombo({required int id, required String name, required int price}) {
+    if (storeId == null) return;
     _addLine(type: 'combo', id: id, name: name, unitPrice: price);
   }
 

@@ -12,7 +12,8 @@ import 'package:get/get.dart';
 enum CustomerMenuSidebarKind { category, combo }
 
 class CustomerMenuBrowseController extends GetxController {
-  static CustomerMenuBrowseController get to => Get.find<CustomerMenuBrowseController>();
+  static CustomerMenuBrowseController get to =>
+      Get.find<CustomerMenuBrowseController>();
 
   final sidebarKind = CustomerMenuSidebarKind.category.obs;
   final categories = <CustomerCategoryModel>[].obs;
@@ -25,15 +26,16 @@ class CustomerMenuBrowseController extends GetxController {
   final errorMessage = ''.obs;
 
   CustomerCartController get cart => CustomerCartController.to;
-  CustomerOrderSessionController get session => CustomerOrderSessionController.to;
-  CustomerStoreContextController get storeCtx => CustomerStoreContextController.to;
+  CustomerOrderSessionController get session =>
+      CustomerOrderSessionController.to;
+  CustomerStoreContextController get storeCtx =>
+      CustomerStoreContextController.to;
 
   int get storeId => storeCtx.storeId.value;
 
   @override
   void onInit() {
     super.onInit();
-    ever(storeCtx.storeId, (_) => reloadForStore());
     reloadForStore();
   }
 
@@ -56,20 +58,24 @@ class CustomerMenuBrowseController extends GetxController {
         CustomerMenuApi.listCombos(storeId),
       ]);
 
-      final categoryResponse = results[0] as CustomerApiResponse<List<CustomerCategoryModel>>;
-      final itemResponse = results[1] as CustomerApiResponse<List<CustomerMenuItemModel>>;
-      final comboResponse = results[2] as CustomerApiResponse<List<CustomerComboModel>>;
+      final categoryResponse =
+          results[0] as CustomerApiResponse<List<CustomerCategoryModel>>;
+      final itemResponse =
+          results[1] as CustomerApiResponse<List<CustomerMenuItemModel>>;
+      final comboResponse =
+          results[2] as CustomerApiResponse<List<CustomerComboModel>>;
 
       if (!categoryResponse.isSuccess ||
           !itemResponse.isSuccess ||
           !comboResponse.isSuccess) {
-        errorMessage.value = categoryResponse.message.isNotEmpty
-            ? categoryResponse.message
-            : itemResponse.message.isNotEmpty
-            ? itemResponse.message
-            : comboResponse.message.isNotEmpty
-            ? comboResponse.message
-            : '加载失败';
+        errorMessage.value =
+            categoryResponse.message.isNotEmpty
+                ? categoryResponse.message
+                : itemResponse.message.isNotEmpty
+                ? itemResponse.message
+                : comboResponse.message.isNotEmpty
+                ? comboResponse.message
+                : '加载失败';
         categories.clear();
         allItems.clear();
         visibleItems.clear();
@@ -112,14 +118,20 @@ class CustomerMenuBrowseController extends GetxController {
   }
 
   Future<void> submitOrder() async {
+    final currentStoreId = storeCtx.storeId.value;
+    cart.ensureStore(currentStoreId);
     if (cart.lines.isEmpty || cart.totalQty <= 0) return;
+    if (cart.storeId != currentStoreId) {
+      showAppToast("提交订单失败");
+      return;
+    }
     if (!storeCtx.storeOpen.value) {
       showAppToast(CustomerCommonI18n.storeRestHint.tr);
       return;
     }
     isSubmitting.value = true;
     try {
-      await submitCustomerOrder(storeId: storeId);
+      await submitCustomerOrder(storeId: currentStoreId);
     } finally {
       isSubmitting.value = false;
     }
@@ -145,6 +157,8 @@ class CustomerMenuBrowseController extends GetxController {
       visibleItems.clear();
       return;
     }
-    visibleItems.assignAll(allItems.where((item) => item.categoryId == categoryId));
+    visibleItems.assignAll(
+      allItems.where((item) => item.categoryId == categoryId),
+    );
   }
 }

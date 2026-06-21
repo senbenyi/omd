@@ -9,7 +9,6 @@ import 'package:base/utils/nine_env.dart';
 import 'package:common/theme/no_splash_theme.dart';
 import 'package:common/utils/SharedStorageUtil.dart';
 import 'package:customer/customer.dart';
-import 'package:customer/module/menu/customer_menu_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
