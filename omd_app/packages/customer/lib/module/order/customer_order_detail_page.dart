@@ -6,6 +6,7 @@ import 'package:customer/module/common/customer_table_header.dart';
 import 'package:customer/module/menu/customer_menu_models.dart';
 import 'package:customer/module/order/customer_cart_controller.dart';
 import 'package:customer/module/order/customer_order_session_controller.dart';
+import 'package:customer/module/store/customer_store_context_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -23,8 +24,12 @@ class CustomerOrderDetailPage extends StatelessWidget {
       leading: const BackButton(),
       body: Obx(() {
         final _ = cart.revision.value;
-        final activeOrder = session.currentOrder.value;
-        final hasCart = cart.lines.isNotEmpty;
+        final storeId = CustomerStoreContextController.to.storeId.value;
+        final order = session.currentOrder.value;
+        final activeOrder =
+            order != null && order.storeId == storeId ? order : null;
+        final hasCart =
+            cart.storeId == storeId && cart.lines.isNotEmpty;
 
         if (!hasCart && activeOrder == null) {
           return Center(

@@ -77,7 +77,6 @@ public sealed class MockUserDefinition
 /// <summary>mock/stores.json</summary>
 public sealed class MockStoresDocument
 {
-    public long OwnerUserId { get; set; } = 2;
     public List<MockStoreDefinition> Stores { get; set; } = [];
 }
 

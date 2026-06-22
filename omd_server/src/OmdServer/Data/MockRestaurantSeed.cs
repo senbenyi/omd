@@ -28,8 +28,6 @@ public static class MockRestaurantSeed
             return;
         }
 
-        await EnsureMockStoreOwnershipAsync(db, document.Stores);
-
         var storeCreated = 0;
         var storeUpdated = 0;
         foreach (var definition in document.Stores)
@@ -109,26 +107,6 @@ public static class MockRestaurantSeed
         }
 
         return (created, updated);
-    }
-
-    private static async Task EnsureMockStoreOwnershipAsync(
-        AppDbContext db,
-        IReadOnlyList<MockStoreDefinition> definitions)
-    {
-        var changed = false;
-        foreach (var definition in definitions)
-        {
-            if (!await db.Users.AnyAsync(u => u.Id == definition.UserId))
-                continue;
-
-            var store = await db.Stores.FirstOrDefaultAsync(s => s.Name == definition.Name);
-            if (store is null || store.OwnerUserId == definition.UserId) continue;
-            store.OwnerUserId = definition.UserId;
-            changed = true;
-        }
-
-        if (changed)
-            await db.SaveChangesAsync();
     }
 
     private static async Task<(bool Created, bool Updated)> SyncStoreAsync(

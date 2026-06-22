@@ -36,7 +36,6 @@ class CustomerCartController extends GetxController {
 
   void _notifyChanged() {
     revision.value++;
-    lines.refresh();
   }
 
   void ensureStore(int newStoreId) {

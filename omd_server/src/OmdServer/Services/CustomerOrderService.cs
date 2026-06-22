@@ -21,9 +21,6 @@ public class CustomerOrderService
         long storeId,
         CreateCustomerOrderRequest request)
     {
-        if (request.StoreId is > 0 && request.StoreId.Value != storeId)
-            return (null, ApiResponse<object?>.Fail(ApiCodes.InvalidParams, "门店 Id 不匹配"));
-
         if (request.OrderId is > 0)
             return await AppendOrderAsync(storeId, request.OrderId.Value, request);
 
@@ -138,9 +135,6 @@ public class CustomerOrderService
 
         return (MapOrder(order, order.Lines.Select(MapLine).ToList()), null);
     }
-
-    public async Task<CustomerOrderDto?> GetCurrentOrderAsync(long storeId, int tableNumber) =>
-        await GetActiveOrderAsync(storeId, tableNumber);
 
     public async Task<CustomerOrderDto?> GetActiveOrderAsync(long storeId, int tableNumber)
     {

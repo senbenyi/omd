@@ -3,7 +3,6 @@ import 'package:customer/common/customer_constants.dart';
 import 'package:customer/module/api/customer_store_api.dart';
 import 'package:customer/module/menu/customer_menu_browse_controller.dart';
 import 'package:customer/module/order/customer_cart_controller.dart';
-import 'package:customer/module/order/customer_order_session_controller.dart';
 import 'package:customer/module/store/customer_store_models.dart';
 import 'package:customer/module/store/customer_store_prefs.dart';
 import 'package:get/get.dart';
@@ -59,16 +58,14 @@ class CustomerStoreContextController extends GetxController {
     await CustomerStorePrefs.save(store);
 
     CustomerCartController.to.ensureStore(store.id);
-    CustomerOrderSessionController.to.clearIfStoreMismatch(store.id);
 
-    if (Get.isRegistered<CustomerMenuBrowseController>()) {
-      NineProgressHud.showLoading();
-      try {
-        await CustomerOrderSessionController.to.refreshCurrentOrder();
-        await CustomerMenuBrowseController.to.reloadForStore();
-      } finally {
-        NineProgressHud.dismiss();
-      }
+    if (!Get.isRegistered<CustomerMenuBrowseController>()) return;
+
+    NineProgressHud.showLoading();
+    try {
+      await CustomerMenuBrowseController.to.reloadForStore();
+    } finally {
+      NineProgressHud.dismiss();
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:customer/common/customer_translations.dart';
 import 'package:customer/module/common/customer_checkout_bar.dart';
 import 'package:customer/module/menu/customer_menu_browse_controller.dart';
 import 'package:customer/module/order/customer_cart_controller.dart';
+import 'package:customer/module/order/customer_checkout_summary.dart';
 import 'package:customer/module/order/customer_order_detail_page.dart';
 import 'package:customer/module/order/customer_order_session_controller.dart';
 import 'package:customer/module/store/customer_store_context_controller.dart';
@@ -22,47 +23,35 @@ class CustomerMenuBottomBar extends StatelessWidget {
 
     return Obx(() {
       final _ = cart.revision.value;
-      final currentStoreId = storeCtx.storeId.value;
-      final activeOrder = session.currentOrder.value;
-      final cartTotal = cart.totalCents;
-      final cartQty = cart.totalQty;
-      final cartMatchesStore =
-          cart.storeId == null || cart.storeId == currentStoreId;
-      final orderMatchesStore =
-          activeOrder == null || activeOrder.storeId == currentStoreId;
-      final committedQty =
-          orderMatchesStore
-              ? session.committedItemCountForStore(currentStoreId)
-              : 0;
-      final committedTotal =
-          orderMatchesStore
-              ? session.committedTotalCentsForStore(currentStoreId)
-              : 0;
-      final pendingQty = cartMatchesStore ? cartQty : 0;
-      final pendingTotal = cartMatchesStore ? cartTotal : 0;
-      final displayTotal = committedTotal + pendingTotal;
-      final canSubmit =
-          !menu.isSubmitting.value &&
-          cartQty > 0 &&
-          cartMatchesStore &&
-          orderMatchesStore &&
-          storeCtx.storeOpen.value;
+      final _storeId = storeCtx.storeId.value;
+      final _storeOpen = storeCtx.storeOpen.value;
+      final summary = session.buildCheckoutSummary(
+        storeId: _storeId,
+        storeOpen: _storeOpen,
+        isSubmitting: menu.isSubmitting.value,
+        cart: cart,
+      );
 
       return Container(
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(top: BorderSide(color: Color(0xFFE4E7EC))),
         ),
-        padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 8.h + MediaQuery.paddingOf(context).bottom),
+        padding: EdgeInsets.fromLTRB(
+          12.w,
+          8.h,
+          12.w,
+          8.h + MediaQuery.paddingOf(context).bottom,
+        ),
         child: CustomerCheckoutBar(
-          totalCents: displayTotal,
-          committedQty: committedQty,
-          pendingQty: pendingQty,
+          totalCents: summary.totalCents,
+          committedQty: summary.committedQty,
+          pendingQty: summary.pendingQty,
           isSubmitting: menu.isSubmitting.value,
           onSubmit: menu.submitOrder,
           onTotalTap: () => Get.to(() => const CustomerOrderDetailPage()),
-          canSubmit: canSubmit,
-          submitLabel: activeOrder != null && orderMatchesStore
+          canSubmit: summary.canSubmit,
+          submitLabel: summary.isAppend
               ? CustomerCommonI18n.appendOrder.tr
               : CustomerCommonI18n.submitOrder.tr,
         ),

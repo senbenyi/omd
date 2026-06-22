@@ -73,16 +73,9 @@ public class CustomerController : ControllerBase
         long storeId,
         [FromQuery] int tableNumber = 1)
     {
-        var order = await _orders.GetCurrentOrderAsync(storeId, tableNumber);
+        var order = await _orders.GetActiveOrderAsync(storeId, tableNumber);
         return Ok(ApiResponse<CustomerOrderDto>.Ok(order));
     }
-
-    /// <summary>获取桌号当前未结算订单（兼容）。</summary>
-    [HttpGet("orders/active")]
-    public Task<ActionResult<ApiResponse<CustomerOrderDto>>> GetActiveOrder(
-        long storeId,
-        [FromQuery] int tableNumber = 1) =>
-        GetCurrentOrder(storeId, tableNumber);
 
     /// <summary>获取未结算订单详情。</summary>
     [HttpGet("orders/{orderId:long}")]

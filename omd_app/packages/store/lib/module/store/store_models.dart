@@ -102,14 +102,14 @@ class StoreModel {
       businessHours:
           hoursRaw is Map
               ? StoreBusinessHours.fromJson(
-                Map<String, dynamic>.from(hoursRaw as Map),
+                Map<String, dynamic>.from(hoursRaw),
               )
               : StoreBusinessHours.defaults(),
       closedWeekdays: _parseWeekdays(json['closedWeekdays']),
       serviceInfo:
           serviceRaw is Map
               ? StoreServiceInfo.fromJson(
-                Map<String, dynamic>.from(serviceRaw as Map),
+                Map<String, dynamic>.from(serviceRaw),
               )
               : StoreServiceInfo(
                 serviceExpireAt: '',

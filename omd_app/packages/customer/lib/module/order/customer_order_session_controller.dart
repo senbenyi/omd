@@ -10,10 +10,6 @@ class CustomerOrderSessionController extends GetxController {
 
   final currentOrder = Rxn<CustomerOrderResultModel>();
 
-  int? get activeOrderId => currentOrder.value?.orderId;
-
-  int get committedTotalCents => currentOrder.value?.totalAmount ?? 0;
-
   int committedItemCountForStore(int storeId) {
     final order = currentOrder.value;
     if (order == null || order.storeId != storeId) return 0;
@@ -24,11 +20,6 @@ class CustomerOrderSessionController extends GetxController {
     final order = currentOrder.value;
     if (order == null || order.storeId != storeId) return 0;
     return order.totalAmount;
-  }
-
-  int displayTotalCents(int cartTotalCents) {
-    final storeId = CustomerStoreContextController.to.storeId.value;
-    return committedTotalCentsForStore(storeId) + cartTotalCents;
   }
 
   Future<void> refreshCurrentOrder() async {
@@ -44,13 +35,6 @@ class CustomerOrderSessionController extends GetxController {
       return;
     }
     currentOrder.value = order;
-  }
-
-  void clearIfStoreMismatch(int storeId) {
-    final order = currentOrder.value;
-    if (order != null && order.storeId != storeId) {
-      currentOrder.value = null;
-    }
   }
 
   void applySubmittedOrder(CustomerOrderResultModel order) {

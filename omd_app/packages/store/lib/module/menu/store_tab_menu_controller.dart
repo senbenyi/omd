@@ -233,15 +233,6 @@ class StoreTabMenuController extends GetxController {
     }
   }
 
-  Future<void> refreshCurrent() async {
-    final storeId = selectedStoreId.value;
-    if (storeId == null) {
-      await loadStores();
-      return;
-    }
-    await refreshActiveTab();
-  }
-
   Future<void> refreshActiveTab() async {
     final storeId = selectedStoreId.value;
     if (storeId == null) return;

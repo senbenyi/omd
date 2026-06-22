@@ -14,7 +14,6 @@ final class CustomerCommonI18n {
   static const storeStatusRest = 'customerStoreStatusRest';
   static const retry = 'customerRetry';
   static const totalLabel = 'customerTotalLabel';
-  static const selectedItems = 'customerSelectedItems';
   static const committedDishes = 'customerCommittedDishes';
   static const pendingDishes = 'customerPendingDishes';
   static const submitOrder = 'customerSubmitOrder';
@@ -49,7 +48,6 @@ const customerCommonZhCN = {
   CustomerCommonI18n.storeStatusRest: '休息中',
   CustomerCommonI18n.retry: '重试',
   CustomerCommonI18n.totalLabel: '合计',
-  CustomerCommonI18n.selectedItems: '已选 @count 个菜品',
   CustomerCommonI18n.committedDishes: '已下单 @count 道菜',
   CustomerCommonI18n.pendingDishes: '等待下单 @count 道菜',
   CustomerCommonI18n.submitOrder: '提交订单',
@@ -75,7 +73,6 @@ const customerCommonZhTW = {
   CustomerCommonI18n.storeStatusRest: '休息中',
   CustomerCommonI18n.retry: '重試',
   CustomerCommonI18n.totalLabel: '合計',
-  CustomerCommonI18n.selectedItems: '已選 @count 個菜品',
   CustomerCommonI18n.committedDishes: '已下單 @count 道菜',
   CustomerCommonI18n.pendingDishes: '等待下單 @count 道菜',
   CustomerCommonI18n.submitOrder: '提交訂單',
@@ -101,7 +98,6 @@ const customerCommonEnUS = {
   CustomerCommonI18n.storeStatusRest: 'Closed',
   CustomerCommonI18n.retry: 'Retry',
   CustomerCommonI18n.totalLabel: 'Total',
-  CustomerCommonI18n.selectedItems: '@count selected',
   CustomerCommonI18n.committedDishes: 'Ordered @count dishes',
   CustomerCommonI18n.pendingDishes: 'Pending @count dishes',
   CustomerCommonI18n.submitOrder: 'Submit order',

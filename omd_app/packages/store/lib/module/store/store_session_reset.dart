@@ -12,15 +12,4 @@ abstract final class StoreSessionReset {
       Get.find<StoreTabStoreController>().stores.clear();
     }
   }
-
-  static Future<void> onLogin() async {
-    if (Get.isRegistered<StoreTabMenuController>()) {
-      Get.find<StoreTabMenuController>().resetForAuthChange();
-    }
-    if (Get.isRegistered<StoreTabStoreController>()) {
-      final storeController = Get.find<StoreTabStoreController>();
-      storeController.stores.clear();
-      await storeController.loadStores();
-    }
-  }
 }

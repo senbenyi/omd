@@ -15,7 +15,6 @@ import 'package:store/module/store/store_i18n.dart';
 import 'package:store/module/store/store_manage_page.dart';
 import 'package:store/module/store/store_models.dart';
 import 'package:store/module/store/store_status_chip.dart';
-import 'package:store/module/store/store_tab_store_controller.dart';
 
 class StoreTabMinePage extends StatefulWidget {
   const StoreTabMinePage({super.key});
@@ -42,9 +41,6 @@ class _StoreTabMinePageState extends State<StoreTabMinePage> {
     final changed = await Get.to<bool>(() => const StoreManagePage());
     if (changed != true) return;
 
-    if (Get.isRegistered<StoreTabStoreController>()) {
-      await Get.find<StoreTabStoreController>().loadStores();
-    }
     await _menu?.loadStores();
   }
 

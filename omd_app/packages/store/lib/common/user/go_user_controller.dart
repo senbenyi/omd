@@ -53,7 +53,6 @@ class GoUserController extends GetxController {
       _loginInfoKey,
       jsonEncode(model.toJson()),
     );
-    await StoreSessionReset.onLogin();
     NLog.d('Go 登录信息保存成功 userId=${model.displayUserId}');
   }
 

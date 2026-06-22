@@ -13,8 +13,7 @@ public record CreateCustomerOrderRequest(
     int TableNumber,
     string? Remark,
     List<CustomerOrderLineRequest> Items,
-    long? OrderId = null,
-    long? StoreId = null);
+    long? OrderId = null);
 
 public record CustomerOrderLineDto(
     string Type,
